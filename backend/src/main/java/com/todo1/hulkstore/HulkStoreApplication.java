@@ -3,11 +3,11 @@ package com.todo1.hulkstore;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+// TODO: create missing entity (contains dc, marvel, etc.)
+
 @SpringBootApplication
-public class HulkstoreApplication {
-
+public class HulkStoreApplication {
 	public static void main(String[] args) {
-		SpringApplication.run(HulkstoreApplication.class, args);
+		SpringApplication.run(HulkStoreApplication.class, args);
 	}
-
 }
