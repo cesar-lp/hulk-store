@@ -83,6 +83,17 @@ public class ProductConverterTest {
     }
 
     @Test
+    void shouldReturnEmptyProductTypeDTOListWhenConvertingFromInvalidValues() {
+        List<ProductTypeDTO> returnedList = productConverter.toProductTypeDTOList(null);
+        assertNotNull(returnedList);
+        assertTrue(returnedList.isEmpty());
+
+        returnedList = productConverter.toProductTypeDTOList(new ArrayList<>());
+        assertNotNull(returnedList);
+        assertTrue(returnedList.isEmpty());
+    }
+
+    @Test
     void shouldConvertProductTypeToProductTypeDTO() {
         ProductType productType = new ProductType(1L, "Cup");
         ProductTypeDTO dto = productConverter.toProductTypeDTO(productType);
