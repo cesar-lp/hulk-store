@@ -46,13 +46,13 @@ class ProductServiceImplTest {
 
     @Test
     void shouldGetAllProductsSuccessfully() {
-        List<Product> existingProducts = getExistingProductsList();
-        List<ProductDTO> existingProductsDTOs = getExistingProductsDTOList();
+        var existingProducts = getExistingProductsList();
+        var existingProductsDTOs = getExistingProductsDTOList();
 
         when(productRepository.findAll()).thenReturn(existingProducts);
         when(productConverter.toProductDTOList(existingProducts)).thenReturn(existingProductsDTOs);
 
-        List<ProductDTO> foundProducts = productService.getAllProducts();
+        var foundProducts = productService.getAllProducts();
 
         assertEquals(existingProductsDTOs, foundProducts);
         verify(productRepository, times(1)).findAll();
@@ -61,14 +61,14 @@ class ProductServiceImplTest {
 
     @Test
     void shouldGetProductByIdSuccessfully() {
-        Product existingProduct = getExistingProductMock();
-        Long id = existingProduct.getId();
-        ProductDTO expectedProduct = getExistingProductDTOMock();
+        var existingProduct = getExistingProductMock();
+        var id = existingProduct.getId();
+        var expectedProduct = getExistingProductDTOMock();
 
         when(productRepository.findById(id)).thenReturn(Optional.of((existingProduct)));
         when(productConverter.toProductDTO(existingProduct)).thenReturn(expectedProduct);
 
-        ProductDTO foundProduct = productService.getProductById(id);
+        var foundProduct = productService.getProductById(id);
 
         assertEquals(expectedProduct, foundProduct);
         verify(productRepository, times(1)).findById(1L);
@@ -77,7 +77,7 @@ class ProductServiceImplTest {
 
     @Test
     void shouldThrowExceptionWhenRetrievingNonExistingProductById() {
-        Long id = 99L;
+        var id = 99L;
 
         when(productRepository.findById(id)).thenReturn(Optional.empty());
 
@@ -87,16 +87,16 @@ class ProductServiceImplTest {
 
     @Test
     void shouldCreateProductSuccessfully() {
-        Product newProduct = getNewProductMock();
-        ProductDTO newProductDTO = getNewProductDTOMock();
-        Product createdProduct = getExistingProductMock();
-        ProductDTO expectedProductDTO = getExistingProductDTOMock();
+        var newProduct = getNewProductMock();
+        var newProductDTO = getNewProductDTOMock();
+        var createdProduct = getExistingProductMock();
+        var expectedProductDTO = getExistingProductDTOMock();
 
         when(productConverter.toProduct(newProductDTO)).thenReturn(newProduct);
         when(productRepository.save(newProduct)).thenReturn(createdProduct);
         when(productConverter.toProductDTO(createdProduct)).thenReturn(expectedProductDTO);
 
-        ProductDTO createdProductDTO = productService.createProduct(newProductDTO);
+        var createdProductDTO = productService.createProduct(newProductDTO);
 
         assertEquals(expectedProductDTO, createdProductDTO);
         verify(productRepository, times(1)).save(any(Product.class));
@@ -106,9 +106,9 @@ class ProductServiceImplTest {
 
     @Test
     void shouldUpdateProductSuccessfully() {
-        Long id = 1L;
-        Product existingProduct = getExistingProductMock();
-        ProductDTO updatedProductDTO = ProductDTO.builder()
+        var id = 1L;
+        var existingProduct = getExistingProductMock();
+        var updatedProductDTO = ProductDTO.builder()
                 .id(1L)
                 .name("Iron Man Cup")
                 .productType(new ProductTypeDTO(1L, "Cup"))
@@ -116,7 +116,7 @@ class ProductServiceImplTest {
                 .stock(5)
                 .build();
 
-        Product updatedProduct = Product.builder()
+        var updatedProduct = Product.builder()
                 .id(1L)
                 .name("Iron Man Cup")
                 .productType(new ProductType(1L, "Cup"))
@@ -129,7 +129,7 @@ class ProductServiceImplTest {
         when(productRepository.save(existingProduct)).thenReturn(updatedProduct);
         when(productConverter.toProductDTO(updatedProduct)).thenReturn(updatedProductDTO);
 
-        ProductDTO returnedProductDTO = productService.updateProduct(id, updatedProductDTO);
+        var returnedProductDTO = productService.updateProduct(id, updatedProductDTO);
 
         assertEquals(updatedProductDTO, returnedProductDTO);
         verify(productConverter, times(1)).toProduct(updatedProductDTO);
@@ -140,9 +140,9 @@ class ProductServiceImplTest {
 
     @Test
     void shouldThrowExceptionWhenUpdatingNonExistingProduct() {
-        Long id = 99L;
-        ProductDTO productDTOToUpdate = getExistingProductDTOMock();
-        Product productToUpdate = getExistingProductMock();
+        var id = 99L;
+        var productDTOToUpdate = getExistingProductDTOMock();
+        var productToUpdate = getExistingProductMock();
 
         when(productConverter.toProduct(productDTOToUpdate)).thenReturn(productToUpdate);
         when(productRepository.findById(id)).thenReturn(Optional.empty());
@@ -155,8 +155,8 @@ class ProductServiceImplTest {
 
     @Test
     void shouldDeleteProductByIdSuccessfully() {
-        Product productToDelete = getExistingProductMock();
-        Long id = productToDelete.getId();
+        var productToDelete = getExistingProductMock();
+        var id = productToDelete.getId();
 
         when(productRepository.findById(id)).thenReturn(Optional.of(productToDelete));
 
@@ -168,7 +168,7 @@ class ProductServiceImplTest {
 
     @Test
     void shouldThrowExceptionWhenDeletingNonExistingProductById() {
-        Long id = 99L;
+        var id = 99L;
 
         when(productRepository.findById(id)).thenReturn(Optional.empty());
 
@@ -215,20 +215,62 @@ class ProductServiceImplTest {
     }
 
     private List<Product> getExistingProductsList() {
-        ProductType shirtProductType = new ProductType(1L, "Shirt");
-        return Arrays.asList(
-                new Product(1L, "Iron Man Shirt", shirtProductType, BigDecimal.valueOf(50.00), 5),
-                new Product(2L, "Spiderman Shirt", shirtProductType, BigDecimal.valueOf(50.00), 5),
-                new Product(3L, "Batman Shirt", shirtProductType, BigDecimal.valueOf(50.00), 5)
-        );
+        var shirtProductType = new ProductType(1L, "Shirt");
+
+        var ironManShirt = Product.builder()
+                .id(1L)
+                .name("Iron Man Shirt")
+                .productType(shirtProductType)
+                .price(BigDecimal.valueOf(60.00))
+                .stock(10)
+                .build();
+
+        var spiderManShirt = Product.builder()
+                .id(2L)
+                .name("Spider Man Shirt")
+                .productType(shirtProductType)
+                .price(BigDecimal.valueOf(45.00))
+                .stock(5)
+                .build();
+
+        var batmanShirt = Product.builder()
+                .id(3L)
+                .name("Batman Shirt")
+                .productType(shirtProductType)
+                .price(BigDecimal.valueOf(40.00))
+                .stock(5)
+                .build();
+
+        return Arrays.asList(ironManShirt, spiderManShirt, batmanShirt);
     }
 
     private List<ProductDTO> getExistingProductsDTOList() {
-        ProductTypeDTO shirtProductTypeDTO = new ProductTypeDTO(1L, "Shirt");
-        return Arrays.asList(
-                new ProductDTO(1L, "Iron Man Shirt", shirtProductTypeDTO, BigDecimal.valueOf(50.00), 5),
-                new ProductDTO(2L, "Spiderman Shirt", shirtProductTypeDTO, BigDecimal.valueOf(50.00), 5),
-                new ProductDTO(3L, "Batman Shirt", shirtProductTypeDTO, BigDecimal.valueOf(50.00), 5)
-        );
+        var shirtProductType = new ProductTypeDTO(1L, "Shirt");
+
+        var ironManShirt = ProductDTO.builder()
+                .id(1L)
+                .name("Iron Man Shirt")
+                .productType(shirtProductType)
+                .price(BigDecimal.valueOf(60.00))
+                .stock(10)
+                .build();
+
+        var spiderManShirt = ProductDTO.builder()
+                .id(2L)
+                .name("Spider Man Shirt")
+                .productType(shirtProductType)
+                .price(BigDecimal.valueOf(45.00))
+                .stock(5)
+                .build();
+
+        var batmanShirt = ProductDTO.builder()
+                .id(3L)
+                .name("Batman Shirt")
+                .productType(shirtProductType)
+                .price(BigDecimal.valueOf(40.00))
+                .stock(5)
+                .build();
+
+        return Arrays.asList(ironManShirt, spiderManShirt, batmanShirt);
     }
 }

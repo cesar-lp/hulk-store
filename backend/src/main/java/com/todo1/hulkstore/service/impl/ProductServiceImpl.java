@@ -1,7 +1,6 @@
 package com.todo1.hulkstore.service.impl;
 
 import com.todo1.hulkstore.converter.ProductConverter;
-import com.todo1.hulkstore.domain.Product;
 import com.todo1.hulkstore.dto.ProductDTO;
 import com.todo1.hulkstore.exception.ResourceNotFoundException;
 import com.todo1.hulkstore.repository.ProductRepository;
@@ -32,7 +31,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO getProductById(Long id) {
-        Product product = productRepository
+        var product = productRepository
                 .findById(id)
                 .orElseThrow(() -> {
                     logger.error("getProductById: Product not found for id {}.", id);
@@ -44,39 +43,31 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO createProduct(ProductDTO newProductDTO) {
-        Product newProduct = converter.toProduct(newProductDTO);
+        var newProduct = converter.toProduct(newProductDTO);
         return converter.toProductDTO(productRepository.save(newProduct));
     }
 
     @Override
     public ProductDTO updateProduct(Long id, ProductDTO updatedProductDTO) {
-        Product updated = converter.toProduct(updatedProductDTO);
-        Product existingProduct = productRepository.findById(id)
+        var updated = converter.toProduct(updatedProductDTO);
+        var existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> {
                     logger.error("updateProduct: Product not found for id {}.", id);
                     return new ResourceNotFoundException("Product not found for id " + id);
                 });
 
-        updateProductDetails(existingProduct, updated);
         return converter.toProductDTO(productRepository.save(existingProduct));
     }
 
     @Override
     public void deleteProductById(Long id) {
-        Product productToDelete = productRepository
+        var productToDelete = productRepository
                 .findById(id)
                 .orElseThrow(() -> {
                     logger.error("deleteProductById: Product not found for id {}.", id);
                     return new ResourceNotFoundException("Product not found for id " + id);
                 });
         productRepository.delete(productToDelete);
-    }
-
-    private void updateProductDetails(Product old, Product updated) {
-        old.setName(updated.getName());
-        old.setPrice(updated.getPrice());
-        old.setStock(updated.getStock());
-        old.setProductType(updated.getProductType());
     }
 }
 

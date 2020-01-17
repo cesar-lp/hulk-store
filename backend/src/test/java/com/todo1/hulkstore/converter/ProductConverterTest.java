@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -27,7 +26,7 @@ public class ProductConverterTest {
 
     @Test
     void shouldReturnEmptyProductDTOListWhenConvertingFromInvalidProductList() {
-        List<ProductDTO> returnedList = productConverter.toProductDTOList(null);
+        var returnedList = productConverter.toProductDTOList(null);
         assertNotNull(returnedList);
         assertTrue(returnedList.isEmpty());
 
@@ -38,7 +37,7 @@ public class ProductConverterTest {
 
     @Test
     void shouldConvertProductToProductDTO() {
-        Product product = Product.builder()
+        var product = Product.builder()
                 .id(1L)
                 .name("Iron Man Cup")
                 .productType(new ProductType(1L, "Cup"))
@@ -61,7 +60,7 @@ public class ProductConverterTest {
 
     @Test
     void shouldConvertProductDTOToProduct() {
-        ProductDTO dto = ProductDTO.builder()
+        var dto = ProductDTO.builder()
                 .id(1L)
                 .name("Iron Man Cup")
                 .productType(new ProductTypeDTO(1L, "Cup"))
@@ -84,7 +83,7 @@ public class ProductConverterTest {
 
     @Test
     void shouldReturnEmptyProductTypeDTOListWhenConvertingFromInvalidValues() {
-        List<ProductTypeDTO> returnedList = productConverter.toProductTypeDTOList(null);
+        var returnedList = productConverter.toProductTypeDTOList(null);
         assertNotNull(returnedList);
         assertTrue(returnedList.isEmpty());
 
@@ -95,8 +94,8 @@ public class ProductConverterTest {
 
     @Test
     void shouldConvertProductTypeToProductTypeDTO() {
-        ProductType productType = new ProductType(1L, "Cup");
-        ProductTypeDTO dto = productConverter.toProductTypeDTO(productType);
+        var productType = new ProductType(1L, "Cup");
+        var dto = productConverter.toProductTypeDTO(productType);
 
         assertEquals(productType.getId(), dto.getId());
         assertEquals(productType.getName(), dto.getName());
@@ -109,8 +108,8 @@ public class ProductConverterTest {
 
     @Test
     void shouldConvertProductTypeDTOToProductType() {
-        ProductTypeDTO dto = new ProductTypeDTO(1L, "Cup");
-        ProductType productType = productConverter.toProductType(dto);
+        var dto = new ProductTypeDTO(1L, "Cup");
+        var productType = productConverter.toProductType(dto);
 
         assertEquals(dto.getId(), productType.getId());
         assertEquals(dto.getName(), productType.getName());

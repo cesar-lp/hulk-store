@@ -32,7 +32,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
 
     @Override
     public ProductTypeDTO getProductTypeById(Long id) {
-        ProductType productType = productTypeRepository
+        var productType = productTypeRepository
                 .findById(id)
                 .orElseThrow(() -> {
                     logger.error("getProductTypeById: Product type not found for id {}.", id);
@@ -44,15 +44,15 @@ public class ProductTypeServiceImpl implements ProductTypeService {
 
     @Override
     public ProductTypeDTO createProductType(ProductTypeDTO newProductTypeDTO) {
-        ProductType productType = productConverter.toProductType(newProductTypeDTO);
+        var productType = productConverter.toProductType(newProductTypeDTO);
         return productConverter
                 .toProductTypeDTO(productTypeRepository.save(productType));
     }
 
     @Override
     public ProductTypeDTO updateProductType(Long id, ProductTypeDTO updatedProductTypeDTO) {
-        ProductType updatedProductType = productConverter.toProductType(updatedProductTypeDTO);
-        ProductType existingProduct = productTypeRepository
+        var updatedProductType = productConverter.toProductType(updatedProductTypeDTO);
+        var existingProduct = productTypeRepository
                 .findById(id)
                 .orElseThrow(() -> {
                     logger.error("updateProductType: Product type not found for id {}.", id);
@@ -66,7 +66,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
 
     @Override
     public void deleteProductTypeById(Long id) {
-        ProductType productTypeToDelete = productTypeRepository
+        var productTypeToDelete = productTypeRepository
                 .findById(id)
                 .orElseThrow(() -> {
                     logger.error("deleteProductTypeById: Product type not found for id {}.", id);
