@@ -2,6 +2,7 @@ package com.todo1.hulkstore.domain;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -18,11 +19,12 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @Entity
 @Table(name = "product_type")
+@Builder
 public class ProductType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String description;
+    String name;
 }
