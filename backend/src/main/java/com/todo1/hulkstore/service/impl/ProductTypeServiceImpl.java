@@ -3,20 +3,24 @@ package com.todo1.hulkstore.service.impl;
 import com.todo1.hulkstore.converter.ProductConverter;
 import com.todo1.hulkstore.domain.ProductType;
 import com.todo1.hulkstore.dto.ProductTypeDTO;
+import com.todo1.hulkstore.exception.ResourceNotFoundException;
 import com.todo1.hulkstore.repository.ProductTypeRepository;
 import com.todo1.hulkstore.service.ProductTypeService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class ProductTypeServiceImpl implements ProductTypeService {
+
+    Logger logger = LoggerFactory.getLogger(ProductTypeServiceImpl.class.getName());
 
     ProductTypeRepository productTypeRepository;
     ProductConverter productConverter;
@@ -28,10 +32,14 @@ public class ProductTypeServiceImpl implements ProductTypeService {
 
     @Override
     public ProductTypeDTO getProductTypeById(Long id) {
-        return productTypeRepository
+        ProductType productType = productTypeRepository
                 .findById(id)
-                .map(productConverter::toProductTypeDTO)
-                .orElse(null);
+                .orElseThrow(() -> {
+                    logger.error("getProductTypeById: Product type not found for id {}.", id);
+                    return new ResourceNotFoundException("Product type not found for id " + id);
+                });
+
+        return productConverter.toProductTypeDTO(productType);
     }
 
     @Override
@@ -44,20 +52,31 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     @Override
     public ProductTypeDTO updateProductType(Long id, ProductTypeDTO updatedProductTypeDTO) {
         ProductType updatedProductType = productConverter.toProductType(updatedProductTypeDTO);
-        return productTypeRepository
+        ProductType existingProduct = productTypeRepository
                 .findById(id)
-                .flatMap(old -> updateProductTypeDetails(old, updatedProductType))
-                .map(updated -> productConverter.toProductTypeDTO(productTypeRepository.save(updated)))
-                .orElse(null);
+                .orElseThrow(() -> {
+                    logger.error("updateProductType: Product type not found for id {}.", id);
+                    return new ResourceNotFoundException("ProductType not found for id " + id);
+                });
+
+        updateProductTypeDetails(existingProduct, updatedProductType);
+
+        return productConverter.toProductTypeDTO(productTypeRepository.save(existingProduct));
     }
 
     @Override
     public void deleteProductTypeById(Long id) {
-        productTypeRepository.deleteById(id);
+        ProductType productTypeToDelete = productTypeRepository
+                .findById(id)
+                .orElseThrow(() -> {
+                    logger.error("deleteProductTypeById: Product type not found for id {}.", id);
+                    return new ResourceNotFoundException("ProductType not found for id " + id);
+                });
+
+        productTypeRepository.delete(productTypeToDelete);
     }
 
-    private Optional<ProductType> updateProductTypeDetails(ProductType old, ProductType updated) {
+    private void updateProductTypeDetails(ProductType old, ProductType updated) {
         old.setName(updated.getName());
-        return Optional.of(old);
     }
 }

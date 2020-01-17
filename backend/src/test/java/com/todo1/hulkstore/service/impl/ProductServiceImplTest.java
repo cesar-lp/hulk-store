@@ -5,7 +5,9 @@ import com.todo1.hulkstore.domain.Product;
 import com.todo1.hulkstore.domain.ProductType;
 import com.todo1.hulkstore.dto.ProductDTO;
 import com.todo1.hulkstore.dto.ProductTypeDTO;
+import com.todo1.hulkstore.exception.ResourceNotFoundException;
 import com.todo1.hulkstore.repository.ProductRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,9 +20,11 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,8 +39,13 @@ class ProductServiceImplTest {
     @InjectMocks
     private ProductServiceImpl productService;
 
+    @AfterEach
+    void runAfterEach() {
+        verifyNoMoreInteractions(productConverter, productRepository);
+    }
+
     @Test
-    void getAllProducts() {
+    void shouldGetAllProductsSuccessfully() {
         List<Product> existingProducts = getExistingProductsList();
         List<ProductDTO> existingProductsDTOs = getExistingProductsDTOList();
 
@@ -51,7 +60,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void getProductById() {
+    void shouldGetProductByIdSuccessfully() {
         Product existingProduct = getExistingProductMock();
         Long id = existingProduct.getId();
         ProductDTO expectedProduct = getExistingProductDTOMock();
@@ -67,7 +76,17 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void createProduct() {
+    void shouldThrowExceptionWhenRetrievingNonExistingProductById() {
+        Long id = 99L;
+
+        when(productRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> productService.getProductById(id));
+        verify(productRepository, times(1)).findById(id);
+    }
+
+    @Test
+    void shouldCreateProductSuccessfully() {
         Product newProduct = getNewProductMock();
         ProductDTO newProductDTO = getNewProductDTOMock();
         Product createdProduct = getExistingProductMock();
@@ -86,7 +105,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void updateProduct() {
+    void shouldUpdateProductSuccessfully() {
         Long id = 1L;
         Product existingProduct = getExistingProductMock();
         ProductDTO updatedProductDTO = ProductDTO.builder()
@@ -120,10 +139,41 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void deleteProductById() {
-        Long id = 1L;
+    void shouldThrowExceptionWhenUpdatingNonExistingProduct() {
+        Long id = 99L;
+        ProductDTO productDTOToUpdate = getExistingProductDTOMock();
+        Product productToUpdate = getExistingProductMock();
+
+        when(productConverter.toProduct(productDTOToUpdate)).thenReturn(productToUpdate);
+        when(productRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> productService.updateProduct(id, productDTOToUpdate));
+        verify(productConverter, times(1)).toProduct(productDTOToUpdate);
+        verify(productRepository, times(1)).findById(id);
+    }
+
+    @Test
+    void shouldDeleteProductByIdSuccessfully() {
+        Product productToDelete = getExistingProductMock();
+        Long id = productToDelete.getId();
+
+        when(productRepository.findById(id)).thenReturn(Optional.of(productToDelete));
+
         productService.deleteProductById(id);
-        verify(productRepository, times(1)).deleteById(id);
+
+        verify(productRepository, times(1)).findById(id);
+        verify(productRepository, times(1)).delete(productToDelete);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenDeletingNonExistingProductById() {
+        Long id = 99L;
+
+        when(productRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> productService.deleteProductById(id));
+        verify(productRepository, times(1)).findById(id);
     }
 
     private Product getNewProductMock() {

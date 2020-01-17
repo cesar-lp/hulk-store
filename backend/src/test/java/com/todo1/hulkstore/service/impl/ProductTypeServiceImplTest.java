@@ -3,6 +3,7 @@ package com.todo1.hulkstore.service.impl;
 import com.todo1.hulkstore.converter.ProductConverter;
 import com.todo1.hulkstore.domain.ProductType;
 import com.todo1.hulkstore.dto.ProductTypeDTO;
+import com.todo1.hulkstore.exception.ResourceNotFoundException;
 import com.todo1.hulkstore.repository.ProductTypeRepository;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -42,7 +44,7 @@ public class ProductTypeServiceImplTest {
     }
 
     @Test
-    void shouldGetAllProductTypes() {
+    void shouldGetAllProductTypesSuccessfully() {
         List<ProductType> existingProductTypeList = Arrays.asList(
                 new ProductType(1L, "Cup"),
                 new ProductType(2L, "Shirt"));
@@ -61,7 +63,7 @@ public class ProductTypeServiceImplTest {
     }
 
     @Test
-    void shouldGetProductTypeById() {
+    void shouldGetProductTypeByIdSuccessfully() {
         Long id = 1L;
         ProductType existingProductType = new ProductType(id, "Cup");
         ProductTypeDTO existingProductTypeDTO = new ProductTypeDTO(id, "Cup");
@@ -77,7 +79,17 @@ public class ProductTypeServiceImplTest {
     }
 
     @Test
-    void shouldCreateProductType() {
+    void shouldThrowExceptionWhenRetrievingNonExistingProductTypeById() {
+        Long id = 99L;
+
+        when(productTypeRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> productTypeService.getProductTypeById(id));
+        verify(productTypeRepository, times(1)).findById(id);
+    }
+
+    @Test
+    void shouldCreateProductTypeSuccessfully() {
         ProductTypeDTO toCreateDTO = ProductTypeDTO.builder().name("Cup").build();
         ProductType toCreate = ProductType.builder().name("Cup").build();
         ProductTypeDTO newProductTypeDTO = new ProductTypeDTO(1L, "Cup");
@@ -96,7 +108,7 @@ public class ProductTypeServiceImplTest {
     }
 
     @Test
-    void shouldUpdateProductType() {
+    void shouldUpdateProductTypeSuccessfully() {
         Long id = 1L;
         ProductTypeDTO productTypeDTOToUpdate = new ProductTypeDTO(id, "Cups");
         ProductType productTypeToUpdate = new ProductType(id, "Cups");
@@ -107,7 +119,6 @@ public class ProductTypeServiceImplTest {
         when(productTypeRepository.findById(id)).thenReturn(Optional.of(existingProductType));
         when(productTypeRepository.save(existingProductType)).thenReturn(existingProductType);
         when(productConverter.toProductTypeDTO(existingProductType)).thenReturn(updatedProductTypeDTO);
-        when(productConverter.toProductType(productTypeDTOToUpdate)).thenReturn(productTypeToUpdate);
 
         ProductTypeDTO returnedProductTypeDTO = productTypeService.updateProductType(id, productTypeDTOToUpdate);
 
@@ -119,9 +130,40 @@ public class ProductTypeServiceImplTest {
     }
 
     @Test
-    void shouldDeleteProductTypeById() {
+    void shouldThrowExceptionWhenUpdatingNonExistingProduct() {
+        Long id = 99L;
+        ProductTypeDTO productTypeDTOToUpdate = new ProductTypeDTO(id, "Cups");
+        ProductType productTypeToUpdate = new ProductType(id, "Cups");
+
+        when(productConverter.toProductType(productTypeDTOToUpdate)).thenReturn(productTypeToUpdate);
+        when(productTypeRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () ->
+                productTypeService.updateProductType(id, productTypeDTOToUpdate));
+        verify(productConverter, times(1)).toProductType(productTypeDTOToUpdate);
+        verify(productTypeRepository, times(1)).findById(id);
+    }
+
+    @Test
+    void shouldDeleteProductTypeByIdSuccessfully() {
         Long id = 1L;
+        ProductType existingProductType = new ProductType(id, "Cup");
+
+        when(productTypeRepository.findById(id)).thenReturn(Optional.of(existingProductType));
+
         productTypeService.deleteProductTypeById(id);
-        verify(productTypeRepository, times(1)).deleteById(id);
+
+        verify(productTypeRepository, times(1)).findById(id);
+        verify(productTypeRepository, times(1)).delete(existingProductType);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenDeletingNonExistingProductTypeById() {
+        Long id = 99L;
+
+        when(productTypeRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> productTypeService.deleteProductTypeById(id));
+        verify(productTypeRepository, times(1)).findById(id);
     }
 }

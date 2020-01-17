@@ -3,20 +3,24 @@ package com.todo1.hulkstore.service.impl;
 import com.todo1.hulkstore.converter.ProductConverter;
 import com.todo1.hulkstore.domain.Product;
 import com.todo1.hulkstore.dto.ProductDTO;
+import com.todo1.hulkstore.exception.ResourceNotFoundException;
 import com.todo1.hulkstore.repository.ProductRepository;
 import com.todo1.hulkstore.service.ProductService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class ProductServiceImpl implements ProductService {
+
+    Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class.getName());
 
     ProductRepository productRepository;
     ProductConverter converter;
@@ -28,10 +32,14 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO getProductById(Long id) {
-        return productRepository
+        Product product = productRepository
                 .findById(id)
-                .map(converter::toProductDTO)
-                .orElse(null);
+                .orElseThrow(() -> {
+                    logger.error("getProductById: Product not found for id {}.", id);
+                    return new ResourceNotFoundException("Product not found for id " + id);
+                });
+
+        return converter.toProductDTO(product);
     }
 
     @Override
@@ -43,23 +51,32 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDTO updateProduct(Long id, ProductDTO updatedProductDTO) {
         Product updated = converter.toProduct(updatedProductDTO);
-        return productRepository.findById(id)
-                .flatMap(old -> updateProductDetails(old, updated))
-                .map(p -> converter.toProductDTO(productRepository.save(p)))
-                .orElse(null);
+        Product existingProduct = productRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.error("updateProduct: Product not found for id {}.", id);
+                    return new ResourceNotFoundException("Product not found for id " + id);
+                });
+
+        updateProductDetails(existingProduct, updated);
+        return converter.toProductDTO(productRepository.save(existingProduct));
     }
 
     @Override
     public void deleteProductById(Long id) {
-        productRepository.deleteById(id);
+        Product productToDelete = productRepository
+                .findById(id)
+                .orElseThrow(() -> {
+                    logger.error("deleteProductById: Product not found for id {}.", id);
+                    return new ResourceNotFoundException("Product not found for id " + id);
+                });
+        productRepository.delete(productToDelete);
     }
 
-    private Optional<Product> updateProductDetails(Product old, Product updated) {
+    private void updateProductDetails(Product old, Product updated) {
         old.setName(updated.getName());
         old.setPrice(updated.getPrice());
         old.setStock(updated.getStock());
         old.setProductType(updated.getProductType());
-        return Optional.of(old);
     }
 }
 
