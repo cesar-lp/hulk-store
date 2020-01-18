@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @AllArgsConstructor
@@ -45,13 +46,13 @@ public class ProductController {
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductDTO createProduct(@RequestBody ProductDTO newProduct) {
+    public ProductDTO createProduct(@Valid @RequestBody ProductDTO newProduct) {
         return productService.createProduct(newProduct);
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ProductDTO getAllProducts(@PathVariable Long id, @RequestBody ProductDTO updatedProduct) {
+    public ProductDTO getAllProducts(@PathVariable Long id, @Valid @RequestBody ProductDTO updatedProduct) {
         return productService.updateProduct(id, updatedProduct);
     }
 

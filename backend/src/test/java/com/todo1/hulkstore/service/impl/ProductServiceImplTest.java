@@ -126,7 +126,7 @@ class ProductServiceImplTest {
 
         when(productConverter.toProduct(updatedProductDTO)).thenReturn(updatedProduct);
         when(productRepository.findById(id)).thenReturn(Optional.of(existingProduct));
-        when(productRepository.save(existingProduct)).thenReturn(updatedProduct);
+        when(productRepository.save(updatedProduct)).thenReturn(updatedProduct);
         when(productConverter.toProductDTO(updatedProduct)).thenReturn(updatedProductDTO);
 
         var returnedProductDTO = productService.updateProduct(id, updatedProductDTO);
@@ -134,7 +134,7 @@ class ProductServiceImplTest {
         assertEquals(updatedProductDTO, returnedProductDTO);
         verify(productConverter, times(1)).toProduct(updatedProductDTO);
         verify(productRepository, times(1)).findById(id);
-        verify(productRepository, times(1)).save(existingProduct);
+        verify(productRepository, times(1)).save(updatedProduct);
         verify(productConverter, times(1)).toProductDTO(updatedProduct);
     }
 

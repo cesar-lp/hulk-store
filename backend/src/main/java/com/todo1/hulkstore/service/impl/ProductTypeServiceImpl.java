@@ -4,6 +4,7 @@ import com.todo1.hulkstore.converter.ProductConverter;
 import com.todo1.hulkstore.domain.ProductType;
 import com.todo1.hulkstore.dto.ProductTypeDTO;
 import com.todo1.hulkstore.exception.ResourceNotFoundException;
+import com.todo1.hulkstore.exception.ServiceException;
 import com.todo1.hulkstore.repository.ProductTypeRepository;
 import com.todo1.hulkstore.service.ProductTypeService;
 import lombok.AccessLevel;
@@ -27,53 +28,84 @@ public class ProductTypeServiceImpl implements ProductTypeService {
 
     @Override
     public List<ProductTypeDTO> getAllProductTypes() {
-        return productConverter.toProductTypeDTOList(productTypeRepository.findAll());
+        try {
+            return productConverter.toProductTypeDTOList(productTypeRepository.findAll());
+        } catch (Exception e) {
+            logger.error("getAllProductTypes()", e);
+            throw new ServiceException("Couldn't retrieve all product types", e);
+        }
     }
 
     @Override
     public ProductTypeDTO getProductTypeById(Long id) {
-        var productType = productTypeRepository
-                .findById(id)
-                .orElseThrow(() -> {
-                    logger.error("getProductTypeById: Product type not found for id {}.", id);
-                    return new ResourceNotFoundException("Product type not found for id " + id);
-                });
+        try {
+            var productType = productTypeRepository
+                    .findById(id)
+                    .orElseThrow(() -> {
+                        logger.error("getProductTypeById({}): Product type not found.", id);
+                        throw new ResourceNotFoundException("Product type not found for id " + id);
+                    });
 
-        return productConverter.toProductTypeDTO(productType);
+            return productConverter.toProductTypeDTO(productType);
+        } catch (Exception e) {
+            if (e instanceof ResourceNotFoundException) throw e;
+
+            logger.error("getProductTypeById({}): couldn't retrieve product type", id, e);
+            throw new ServiceException("Couldn't retrieve product type", e);
+        }
     }
 
     @Override
     public ProductTypeDTO createProductType(ProductTypeDTO newProductTypeDTO) {
-        var productType = productConverter.toProductType(newProductTypeDTO);
-        return productConverter
-                .toProductTypeDTO(productTypeRepository.save(productType));
+        try {
+            var productType = productConverter.toProductType(newProductTypeDTO);
+            return productConverter
+                    .toProductTypeDTO(productTypeRepository.save(productType));
+        } catch (Exception e) {
+            logger.error("createProductType({}): couldn't create product type", newProductTypeDTO, e);
+            throw new ServiceException("Couldn't create product type", e);
+        }
     }
 
     @Override
     public ProductTypeDTO updateProductType(Long id, ProductTypeDTO updatedProductTypeDTO) {
-        var updatedProductType = productConverter.toProductType(updatedProductTypeDTO);
-        var existingProduct = productTypeRepository
-                .findById(id)
-                .orElseThrow(() -> {
-                    logger.error("updateProductType: Product type not found for id {}.", id);
-                    return new ResourceNotFoundException("ProductType not found for id " + id);
-                });
+        try {
+            var updatedProductType = productConverter.toProductType(updatedProductTypeDTO);
+            var existingProduct = productTypeRepository
+                    .findById(id)
+                    .orElseThrow(() -> {
+                        logger.error("updateProductType({}, {}): Product type not found.", id, updatedProductTypeDTO);
+                        throw new ResourceNotFoundException("Product type not found for id " + id);
+                    });
 
-        updateProductTypeDetails(existingProduct, updatedProductType);
+            updateProductTypeDetails(existingProduct, updatedProductType);
 
-        return productConverter.toProductTypeDTO(productTypeRepository.save(existingProduct));
+            return productConverter.toProductTypeDTO(productTypeRepository.save(existingProduct));
+        } catch (Exception e) {
+            if (e instanceof ResourceNotFoundException) throw e;
+
+            logger.error("updateProductType({}, {}): couldn't update product type", id, updatedProductTypeDTO, e);
+            throw new ServiceException("Couldn't update product type", e);
+        }
     }
 
     @Override
     public void deleteProductTypeById(Long id) {
-        var productTypeToDelete = productTypeRepository
-                .findById(id)
-                .orElseThrow(() -> {
-                    logger.error("deleteProductTypeById: Product type not found for id {}.", id);
-                    return new ResourceNotFoundException("ProductType not found for id " + id);
-                });
+        try {
+            var productTypeToDelete = productTypeRepository
+                    .findById(id)
+                    .orElseThrow(() -> {
+                        logger.error("deleteProductTypeById({}): Product type not found.", id);
+                        throw new ResourceNotFoundException("Product type not found for id " + id);
+                    });
 
-        productTypeRepository.delete(productTypeToDelete);
+            productTypeRepository.delete(productTypeToDelete);
+        } catch (Exception e) {
+            if (e instanceof ResourceNotFoundException) throw e;
+
+            logger.error("deleteProductTypeById({}): couldn't delete product type", id, e);
+            throw new ServiceException("Couldn't delete product type", e);
+        }
     }
 
     private void updateProductTypeDetails(ProductType old, ProductType updated) {

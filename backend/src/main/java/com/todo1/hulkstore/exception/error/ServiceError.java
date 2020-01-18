@@ -1,4 +1,4 @@
-package com.todo1.hulkstore.exception;
+package com.todo1.hulkstore.exception.error;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -6,12 +6,12 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDateTime;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ResourceNotFoundError {
+public class ResponseError {
 
-    public ResourceNotFoundError(String message, String path) {
-        this.error = "Resource Not Found";
+    public ResponseError(String error, String message, Integer statusCode, String path) {
+        this.error = error;
         this.message = message;
-        this.statusCode = 404;
+        this.statusCode = statusCode;
         this.path = path;
         this.timestamp = LocalDateTime.now();
     }

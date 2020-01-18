@@ -1,4 +1,4 @@
 package com.todo1.hulkstore.exception.error;
 
-public class GenericError {
+public class FieldValidationError {
 }
