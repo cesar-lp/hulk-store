@@ -1,7 +1,7 @@
 package com.todo1.hulkstore.controller;
 
-import com.todo1.hulkstore.dto.ProductDTO;
-import com.todo1.hulkstore.service.ProductService;
+import com.todo1.hulkstore.dto.ProductTypeDTO;
+import com.todo1.hulkstore.service.ProductTypeService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -24,41 +24,42 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RestController
 @RequestMapping(
-        value = "/api/products",
+        value = "/api/product-types",
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
 )
-public class ProductController {
+public class ProductTypeController {
 
-    ProductService productService;
+    ProductTypeService productTypeService;
 
     @GetMapping("")
     @ResponseStatus(HttpStatus.OK)
-    public List<ProductDTO> getAllProducts() {
-        return productService.getAllProducts();
+    public List<ProductTypeDTO> getAllProductTypes() {
+        return productTypeService.getAllProductTypes();
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ProductDTO getProductById(@PathVariable Long id) {
-        return productService.getProductById(id);
+    public ProductTypeDTO getProductTypeById(@PathVariable Long id) {
+        return productTypeService.getProductTypeById(id);
     }
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductDTO createProduct(@Valid @RequestBody ProductDTO newProduct) {
-        return productService.createProduct(newProduct);
+    public ProductTypeDTO createProductType(@Valid @RequestBody ProductTypeDTO newProductTypeDTO) {
+        return productTypeService.createProductType(newProductTypeDTO);
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ProductDTO getAllProducts(@PathVariable Long id, @Valid @RequestBody ProductDTO updatedProduct) {
-        return productService.updateProduct(id, updatedProduct);
+    public ProductTypeDTO updateProductType(
+            @Valid @RequestBody ProductTypeDTO updatedProductTypeDTO, @PathVariable Long id) {
+        return productTypeService.updateProductType(id, updatedProductTypeDTO);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteProductById(@PathVariable Long id) {
-        productService.deleteProductById(id);
+    public void deleteProductTypeById(@PathVariable Long id) {
+        productTypeService.deleteProductTypeById(id);
     }
 }

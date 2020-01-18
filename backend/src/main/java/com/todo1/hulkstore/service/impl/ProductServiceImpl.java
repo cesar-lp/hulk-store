@@ -1,65 +1,105 @@
 package com.todo1.hulkstore.service.impl;
 
 import com.todo1.hulkstore.converter.ProductConverter;
-import com.todo1.hulkstore.domain.Product;
 import com.todo1.hulkstore.dto.ProductDTO;
+import com.todo1.hulkstore.exception.ResourceNotFoundException;
+import com.todo1.hulkstore.exception.ServiceException;
 import com.todo1.hulkstore.repository.ProductRepository;
 import com.todo1.hulkstore.service.ProductService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class ProductServiceImpl implements ProductService {
 
+    Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class.getName());
+
     ProductRepository productRepository;
     ProductConverter converter;
 
     @Override
     public List<ProductDTO> getAllProducts() {
-        return converter.toProductDTOList(productRepository.findAll());
+        try {
+            return converter.toProductDTOList(productRepository.findAll());
+        } catch (Exception e) {
+            logger.error("getAllProducts(): Couldn't retrieve all products.", e);
+            throw new ServiceException("Couldn't retrieve all products", e);
+        }
     }
 
     @Override
     public ProductDTO getProductById(Long id) {
-        return productRepository
-                .findById(id)
-                .map(converter::toProductDTO)
-                .orElse(null);
+        try {
+            var product = productRepository
+                    .findById(id)
+                    .orElseThrow(() -> {
+                        logger.error("getProductById({}): Product not found.", id);
+                        throw new ResourceNotFoundException("Product not found for id " + id);
+                    });
+
+            return converter.toProductDTO(product);
+        } catch (Exception e) {
+            if (e instanceof ResourceNotFoundException) throw e;
+
+            logger.error("getProductById({}): Couldn't retrieve product", id, e);
+            throw new ServiceException("Couldn't retrieve product", e);
+        }
     }
 
     @Override
     public ProductDTO createProduct(ProductDTO newProductDTO) {
-        Product newProduct = converter.toProduct(newProductDTO);
-        return converter.toProductDTO(productRepository.save(newProduct));
+        try {
+            var newProduct = converter.toProduct(newProductDTO);
+            return converter.toProductDTO(productRepository.save(newProduct));
+        } catch (Exception e) {
+            logger.error("createProduct({}): Couldn't create Product", newProductDTO, e);
+            throw new ServiceException("Couldn't create Product", e);
+        }
     }
 
     @Override
     public ProductDTO updateProduct(Long id, ProductDTO updatedProductDTO) {
-        Product updated = converter.toProduct(updatedProductDTO);
-        return productRepository.findById(id)
-                .flatMap(old -> updateProductDetails(old, updated))
-                .map(p -> converter.toProductDTO(productRepository.save(p)))
-                .orElse(null);
+        try {
+            var updated = converter.toProduct(updatedProductDTO);
+            productRepository.findById(id)
+                    .orElseThrow(() -> {
+                        logger.error("updateProduct: Product not found for id {}.", id);
+                        return new ResourceNotFoundException("Product not found for id " + id);
+                    });
+
+            return converter.toProductDTO(productRepository.save(updated));
+        } catch (Exception e) {
+            if (e instanceof ResourceNotFoundException) throw e;
+
+            logger.error("updateProduct({}, {}): Couldn't update product", id, updatedProductDTO, e);
+            throw new ServiceException("Couldn't update product", e);
+        }
     }
 
     @Override
     public void deleteProductById(Long id) {
-        productRepository.deleteById(id);
-    }
+        try {
+            var productToDelete = productRepository
+                    .findById(id)
+                    .orElseThrow(() -> {
+                        logger.error("deleteProductById: Product not found for id {}.", id);
+                        return new ResourceNotFoundException("Product not found for id " + id);
+                    });
+            productRepository.delete(productToDelete);
+        } catch (Exception e) {
+            if (e instanceof ResourceNotFoundException) throw e;
 
-    private Optional<Product> updateProductDetails(Product old, Product updated) {
-        old.setName(updated.getName());
-        old.setPrice(updated.getPrice());
-        old.setStock(updated.getStock());
-        old.setProductType(updated.getProductType());
-        return Optional.of(old);
+            logger.error("deleteProductById({}): couldn't delete product", id, e);
+            throw new ServiceException("Couldn't delete product", e);
+        }
     }
 }
 

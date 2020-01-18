@@ -67,4 +67,14 @@ public class ProductConverter {
 
         return new ProductType(source.getId(), source.getName());
     }
+
+    public List<ProductTypeDTO> toProductTypeDTOList(List<ProductType> source) {
+        if (source == null || source.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return source.stream()
+                .map(this::toProductTypeDTO)
+                .collect(toList());
+    }
 }
