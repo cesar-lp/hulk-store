@@ -1,24 +1,33 @@
 package com.todo1.hulkstore.exception.error;
 
 import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ResponseError {
+public class ServiceError implements Serializable {
 
-    public ResponseError(String error, String message, Integer statusCode, String path) {
+    static final long serialVersionUID = -631244046599531569L;
+
+    public ServiceError(String error, String message, String detailMessage, Integer statusCode, String path) {
         this.error = error;
-        this.message = message;
         this.statusCode = statusCode;
+        this.message = message;
+        this.detailMessage = detailMessage;
         this.path = path;
         this.timestamp = LocalDateTime.now();
     }
 
     String error;
-    String message;
     Integer statusCode;
+    String message;
+    String detailMessage;
     String path;
     LocalDateTime timestamp;
 }
