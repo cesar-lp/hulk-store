@@ -40,14 +40,7 @@ public class Product {
 
     BigDecimal price;
 
-    Integer stock;
-
     public static class ProductBuilder {
-        private String name;
-        private ProductType productType;
-        private BigDecimal price;
-        private Integer stock;
-
         public ProductBuilder name(String name) {
             checkNotNullNorEmpty(name, "Product name cannot be null nor empty.");
             this.name = name;
@@ -63,12 +56,6 @@ public class Product {
         public ProductBuilder price(BigDecimal price) {
             checkNotNull(productType, "Product price cannot be null nor negative.");
             this.price = price;
-            return this;
-        }
-
-        public ProductBuilder stock(Integer stock) {
-            checkNotNull(productType, "Product stock cannot be null nor negative.");
-            this.stock = stock;
             return this;
         }
     }

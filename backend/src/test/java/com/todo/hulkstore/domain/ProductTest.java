@@ -49,18 +49,4 @@ public class ProductTest {
         });
         assertEquals(expectedMessage, ex.getMessage());
     }
-
-    @Test
-    void shouldThrowExceptionWhenCreatingProductWithInvalidStock() {
-        var expectedMessage = "Product stock cannot be null nor negative.";
-        var ex = assertThrows(IllegalArgumentException.class, () -> Product.builder()
-                .stock(null)
-                .build());
-        assertEquals(expectedMessage, ex.getMessage());
-
-        ex = assertThrows(IllegalArgumentException.class, () -> Product.builder()
-                .stock(-5)
-                .build());
-        assertEquals(expectedMessage, ex.getMessage());
-    }
 }

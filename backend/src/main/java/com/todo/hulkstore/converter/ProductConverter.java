@@ -24,7 +24,6 @@ public class ProductConverter {
                 .name(source.getName())
                 .productType(toProductTypeDTO(source.getProductType()))
                 .price(source.getPrice())
-                .stock(source.getStock())
                 .build();
     }
 
@@ -38,7 +37,6 @@ public class ProductConverter {
                 .name(source.getName())
                 .productType(toProductType(source.getProductType()))
                 .price(source.getPrice())
-                .stock(source.getStock())
                 .build();
     }
 

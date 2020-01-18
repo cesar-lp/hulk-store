@@ -114,7 +114,6 @@ class ProductServiceImplTest {
                 .name("Iron Man Cup")
                 .productType(new ProductTypeDTO(1L, "Cup"))
                 .price(BigDecimal.valueOf(25.00))
-                .stock(5)
                 .build();
 
         var updatedProduct = Product.builder()
@@ -122,7 +121,6 @@ class ProductServiceImplTest {
                 .name("Iron Man Cup")
                 .productType(new ProductType(1L, "Cup"))
                 .price(BigDecimal.valueOf(25.00))
-                .stock(5)
                 .build();
 
         when(productConverter.toProduct(updatedProductDTO)).thenReturn(updatedProduct);
@@ -182,7 +180,6 @@ class ProductServiceImplTest {
                 .name("Iron Man Cup")
                 .productType(new ProductType(1L, "Cup"))
                 .price(BigDecimal.valueOf(25.00))
-                .stock(20)
                 .build();
     }
 
@@ -192,7 +189,6 @@ class ProductServiceImplTest {
                 .name("Iron Man Cup")
                 .productType(new ProductType(1L, "Cup"))
                 .price(BigDecimal.valueOf(25.00))
-                .stock(20)
                 .build();
     }
 
@@ -201,7 +197,6 @@ class ProductServiceImplTest {
                 .name("Iron Man Cup")
                 .productType(new ProductTypeDTO(1L, "Cup"))
                 .price(BigDecimal.valueOf(25.00))
-                .stock(20)
                 .build();
     }
 
@@ -211,7 +206,6 @@ class ProductServiceImplTest {
                 .name("Iron Man Cup")
                 .productType(new ProductTypeDTO(1L, "Cup"))
                 .price(BigDecimal.valueOf(25.00))
-                .stock(20)
                 .build();
     }
 
@@ -223,7 +217,6 @@ class ProductServiceImplTest {
                 .name("Iron Man Shirt")
                 .productType(shirtProductType)
                 .price(BigDecimal.valueOf(60.00))
-                .stock(10)
                 .build();
 
         var spiderManShirt = Product.builder()
@@ -231,7 +224,6 @@ class ProductServiceImplTest {
                 .name("Spider Man Shirt")
                 .productType(shirtProductType)
                 .price(BigDecimal.valueOf(45.00))
-                .stock(5)
                 .build();
 
         var batmanShirt = Product.builder()
@@ -239,7 +231,6 @@ class ProductServiceImplTest {
                 .name("Batman Shirt")
                 .productType(shirtProductType)
                 .price(BigDecimal.valueOf(40.00))
-                .stock(5)
                 .build();
 
         return Arrays.asList(ironManShirt, spiderManShirt, batmanShirt);
@@ -253,7 +244,6 @@ class ProductServiceImplTest {
                 .name("Iron Man Shirt")
                 .productType(shirtProductType)
                 .price(BigDecimal.valueOf(60.00))
-                .stock(10)
                 .build();
 
         var spiderManShirt = ProductDTO.builder()
@@ -261,7 +251,6 @@ class ProductServiceImplTest {
                 .name("Spider Man Shirt")
                 .productType(shirtProductType)
                 .price(BigDecimal.valueOf(45.00))
-                .stock(5)
                 .build();
 
         var batmanShirt = ProductDTO.builder()
@@ -269,7 +258,6 @@ class ProductServiceImplTest {
                 .name("Batman Shirt")
                 .productType(shirtProductType)
                 .price(BigDecimal.valueOf(40.00))
-                .stock(5)
                 .build();
 
         return Arrays.asList(ironManShirt, spiderManShirt, batmanShirt);

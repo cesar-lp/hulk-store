@@ -4,6 +4,8 @@ import com.todo.hulkstore.domain.Product;
 import com.todo.hulkstore.domain.ProductType;
 import com.todo.hulkstore.dto.ProductDTO;
 import com.todo.hulkstore.dto.ProductTypeDTO;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -15,9 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductConverterTest {
 
-    private static ProductConverter productConverter;
+    static ProductConverter productConverter;
 
     @BeforeAll
     static void setUp() {
@@ -42,7 +45,6 @@ public class ProductConverterTest {
                 .name("Iron Man Cup")
                 .productType(new ProductType(1L, "Cup"))
                 .price(BigDecimal.valueOf(25.00))
-                .stock(20)
                 .build();
         ProductDTO dto = productConverter.toProductDTO(product);
 
@@ -50,7 +52,6 @@ public class ProductConverterTest {
         assertEquals(product.getName(), dto.getName());
         assertEquals(product.getPrice(), dto.getPrice());
         assertEquals(product.getProductType().getName(), dto.getProductType().getName());
-        assertEquals(product.getStock(), dto.getStock());
     }
 
     @Test
@@ -65,7 +66,6 @@ public class ProductConverterTest {
                 .name("Iron Man Cup")
                 .productType(new ProductTypeDTO(1L, "Cup"))
                 .price(BigDecimal.valueOf(25.00))
-                .stock(20)
                 .build();
         Product product = productConverter.toProduct(dto);
 
@@ -73,7 +73,6 @@ public class ProductConverterTest {
         assertEquals(dto.getName(), product.getName());
         assertEquals(dto.getPrice(), product.getPrice());
         assertEquals(dto.getProductType().getName(), product.getProductType().getName());
-        assertEquals(dto.getStock(), product.getStock());
     }
 
     @Test

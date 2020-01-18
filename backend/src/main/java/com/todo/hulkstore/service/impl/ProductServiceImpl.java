@@ -84,6 +84,12 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    /**
+     * Verification mode will prepend the specified failure message if verification fails with the given implementation.
+     * @param mode Implementation used for verification
+     * @param description The custom failure message
+     * @return VerificationMode
+     */
     @Override
     public void deleteProductById(Long id) {
         try {

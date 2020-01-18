@@ -7,7 +7,6 @@ import lombok.experimental.FieldDefaults;
 
 import javax.validation.Valid;
 import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -18,7 +17,7 @@ import java.math.BigDecimal;
 @Builder
 public class ProductDTO implements Serializable {
 
-    private static final long serialVersionUID = -5624378278309074803L;
+    static final long serialVersionUID = -5624378278309074803L;
 
     Long id;
 
@@ -32,8 +31,4 @@ public class ProductDTO implements Serializable {
     @NotNull(message = "Price is required.")
     @DecimalMin(value = "0.0", message = "Price cannot be negative.")
     BigDecimal price;
-
-    @NotNull(message = "Stock is required.")
-    @Min(value = 0L, message = "Stock cannot be negative.")
-    Integer stock;
 }
