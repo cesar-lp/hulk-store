@@ -1,15 +1,15 @@
 package com.todo.hulkstore.service.impl;
 
-import com.todo.hulkstore.domain.Inventory;
+import com.todo.hulkstore.converter.PaymentOrderConverter;
 import com.todo.hulkstore.domain.PaymentOrder;
 import com.todo.hulkstore.domain.Product;
 import com.todo.hulkstore.domain.ProductType;
-import com.todo.hulkstore.dto.PaymentOrderRequestDTO;
-import com.todo.hulkstore.dto.ProductOrderRequestDTO;
+import com.todo.hulkstore.dto.PaymentOrderDTO;
+import com.todo.hulkstore.dto.request.PaymentOrderRequestDTO;
+import com.todo.hulkstore.dto.request.ProductOrderRequestDTO;
 import com.todo.hulkstore.exception.InvalidProductOrderException;
 import com.todo.hulkstore.exception.ResourceNotFoundException;
 import com.todo.hulkstore.exception.error.InvalidProductOrderError;
-import com.todo.hulkstore.repository.InventoryRepository;
 import com.todo.hulkstore.repository.PaymentOrderRepository;
 import com.todo.hulkstore.repository.ProductRepository;
 import lombok.AccessLevel;
@@ -33,6 +33,7 @@ import static org.hamcrest.beans.SamePropertyValuesAs.samePropertyValuesAs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -46,17 +47,17 @@ public class PaymentOrderServiceImplTest {
     PaymentOrderRepository paymentOrderRepository;
 
     @Mock
-    InventoryRepository inventoryRepository;
+    ProductRepository productRepository;
 
     @Mock
-    ProductRepository productRepository;
+    PaymentOrderConverter converter;
 
     @InjectMocks
     PaymentOrderServiceImpl paymentOrderService;
 
     @AfterEach
     void afterEach() {
-        verifyNoMoreInteractions(paymentOrderRepository, inventoryRepository, productRepository);
+        verifyNoMoreInteractions(paymentOrderRepository, productRepository);
     }
 
     @Test
@@ -64,22 +65,27 @@ public class PaymentOrderServiceImplTest {
         var paymentOrderRequest = mockNewPaymentOrderRequestDTO();
         var orderProductIds = asList(1L, 2L, 3L);
         var existingProducts = mockExistingProducts();
-        var existingInventories = mockExistingInventories();
-        var updatedInventories = mockUpdatedInventories();
-        var newPaymentOrders = mockNewPaymentOrders(existingProducts);
         var createdPaymentOrders = mockCreatedPaymentOrders(existingProducts);
+        var expectedPaymentOrdersCreated = mockPaymentOrdersDTOList();
 
-        when(productRepository.findByIdIn(orderProductIds)).thenReturn(existingProducts);
-        when(inventoryRepository.findByProductIdIn(orderProductIds)).thenReturn(existingInventories);
-        when(inventoryRepository.saveAll(existingInventories)).thenReturn(updatedInventories);
-        //when(paymentOrderRepository.saveAll(newPaymentOrders)).thenReturn(createdPaymentOrders);
+        when(productRepository.findByIdIn(orderProductIds))
+                .thenReturn(existingProducts);
 
-        paymentOrderService.registerOrder(paymentOrderRequest);
+        when(productRepository.saveAll(any()))
+                .thenReturn(existingProducts);
+
+        when(paymentOrderRepository.saveAll(any()))
+                .thenReturn(createdPaymentOrders);
+
+        when(converter.toPaymentOrderDTOList(any(), any()))
+                .thenReturn(expectedPaymentOrdersCreated);
+
+        var actualPaymentOrdersCreated = paymentOrderService.registerOrder(paymentOrderRequest);
+
+        assertThat(expectedPaymentOrdersCreated, samePropertyValuesAs(actualPaymentOrdersCreated));
 
         verify(productRepository, times(1)).findByIdIn(orderProductIds);
-        verify(inventoryRepository, times(1)).findByProductIdIn(orderProductIds);
-        verify(inventoryRepository, times(1)).saveAll(existingInventories);
-        // TODO: fix stubbing error
+        verify(productRepository, times(1)).saveAll(existingProducts);
         verify(paymentOrderRepository, times(1)).saveAll(any());
     }
 
@@ -91,41 +97,20 @@ public class PaymentOrderServiceImplTest {
         var expectedError = "Couldn't register payment order: product not found for id 5";
 
         when(productRepository.findByIdIn(orderProductIds)).thenReturn(mockExistingProducts());
-        when(inventoryRepository.findByProductIdIn(orderProductIds)).thenReturn(mockExistingInventories());
 
         var exc = assertThrows(ResourceNotFoundException.class,
                 () -> paymentOrderService.registerOrder(paymentOrderRequest));
 
         assertEquals(expectedError, exc.getMessage());
         verify(productRepository, times(1)).findByIdIn(orderProductIds);
-        verify(inventoryRepository, times(1)).findByProductIdIn(orderProductIds);
-    }
-
-    @Test
-    void shouldThrowExceptionWhenCreatingPaymentOrderForProductWithoutInventory() {
-        var orderProductIds = asList(1L, 2L, 3L);
-        var existingInventories = asList(
-                new Inventory(1L, 1L, 50),
-                new Inventory(2L, 3L, 50));
-        var expectedError = "Couldn't register payment order: inventory not found for product with id 2";
-
-        when(productRepository.findByIdIn(orderProductIds)).thenReturn(mockExistingProducts());
-        when(inventoryRepository.findByProductIdIn(orderProductIds)).thenReturn(existingInventories);
-
-        var exc = assertThrows(ResourceNotFoundException.class,
-                () -> paymentOrderService.registerOrder(mockNewPaymentOrderRequestDTO()));
-
-        assertEquals(expectedError, exc.getMessage());
-        verify(productRepository, times(1)).findByIdIn(orderProductIds);
-        verify(inventoryRepository, times(1)).findByProductIdIn(orderProductIds);
     }
 
     @Test
     void shouldThrowExceptionWhenCreatingPaymentOrderForInvalidQuantities() {
         var orderProductIds = asList(1L, 2L, 3L);
 
-        when(productRepository.findByIdIn(orderProductIds)).thenReturn(mockExistingProducts());
-        when(inventoryRepository.findByProductIdIn(orderProductIds)).thenReturn(mockInventoriesWithLowStock());
+        when(productRepository.findByIdIn(orderProductIds))
+                .thenReturn(mockExistingProductsWitLowStock());
 
         var exc = assertThrows(InvalidProductOrderException.class,
                 () -> paymentOrderService.registerOrder(mockNewPaymentOrderRequestDTO()));
@@ -135,7 +120,6 @@ public class PaymentOrderServiceImplTest {
         assertThat(expectedErrors.get(0), samePropertyValuesAs(exc.getInvalidProductOrderErrors().get(0)));
         assertThat(expectedErrors.get(1), samePropertyValuesAs(exc.getInvalidProductOrderErrors().get(1)));
         verify(productRepository, times(1)).findByIdIn(orderProductIds);
-        verify(inventoryRepository, times(1)).findByProductIdIn(orderProductIds);
     }
 
     private List<InvalidProductOrderError> mockInvalidProductOrderErrors() {
@@ -171,6 +155,7 @@ public class PaymentOrderServiceImplTest {
                 .id(1L)
                 .name("Iron Man Cup")
                 .productType(type)
+                .stock(20)
                 .price(BigDecimal.valueOf(30.00))
                 .build();
 
@@ -178,6 +163,7 @@ public class PaymentOrderServiceImplTest {
                 .id(2L)
                 .name("Batman Cup")
                 .productType(type)
+                .stock(20)
                 .price(BigDecimal.valueOf(27.00))
                 .build();
 
@@ -185,40 +171,41 @@ public class PaymentOrderServiceImplTest {
                 .id(3L)
                 .name("Hulk Cup")
                 .productType(type)
+                .stock(20)
                 .price(BigDecimal.valueOf(25.00))
                 .build();
 
         return asList(p1, p2, p3);
     }
 
-    private List<Inventory> mockExistingInventories() {
-        var inv1 = new Inventory(1L, 1L, 50);
-        var inv2 = new Inventory(2L, 2L, 50);
-        var inv3 = new Inventory(3L, 3L, 50);
+    private List<Product> mockExistingProductsWitLowStock() {
+        var type = new ProductType(1L, "Cups");
 
-        return asList(inv1, inv2, inv3);
-    }
+        var p1 = Product.builder()
+                .id(1L)
+                .name("Iron Man Cup")
+                .productType(type)
+                .stock(5)
+                .price(BigDecimal.valueOf(30.00))
+                .build();
 
-    private List<Inventory> mockInventoriesWithLowStock() {
-        var inv1 = new Inventory(1L, 1L, 5);
-        var inv2 = new Inventory(2L, 2L, 50);
-        var inv3 = new Inventory(3L, 3L, 5);
+        var p2 = Product.builder()
+                .id(2L)
+                .name("Batman Cup")
+                .productType(type)
+                .stock(15)
+                .price(BigDecimal.valueOf(27.00))
+                .build();
 
-        return asList(inv1, inv2, inv3);
-    }
+        var p3 = Product.builder()
+                .id(3L)
+                .name("Hulk Cup")
+                .productType(type)
+                .stock(5)
+                .price(BigDecimal.valueOf(25.00))
+                .build();
 
-    private List<Inventory> mockUpdatedInventories() {
-        var inv1 = new Inventory(1L, 1L, 40);
-        var inv2 = new Inventory(2L, 2L, 40);
-        var inv3 = new Inventory(3L, 3L, 40);
-
-        return asList(inv1, inv2, inv3);
-    }
-
-    private List<PaymentOrder> mockNewPaymentOrders(List<Product> products) {
-        return products.stream()
-                .map(this::toNewPaymentOrder)
-                .collect(toList());
+        return asList(p1, p2, p3);
     }
 
     private List<PaymentOrder> mockCreatedPaymentOrders(List<Product> products) {
@@ -228,14 +215,29 @@ public class PaymentOrderServiceImplTest {
                 .collect(toList());
     }
 
-    private PaymentOrder toNewPaymentOrder(Product p) {
-        var total = BigDecimal.valueOf(10).multiply(p.getPrice());
-        return PaymentOrder.builder()
-                .productId(p.getId())
-                .unitPrice(p.getPrice())
-                .quantity(10)
-                .total(total)
+    private List<PaymentOrderDTO> mockPaymentOrdersDTOList() {
+        var ironManCup = PaymentOrderDTO.builder()
+                .id(1L)
+                .productName("Iron Man Cup")
+                .productStockLeft(10)
+                .total(BigDecimal.valueOf(300.00))
                 .build();
+
+        var batmanCup = PaymentOrderDTO.builder()
+                .id(2L)
+                .productName("Batman Cup")
+                .productStockLeft(10)
+                .total(BigDecimal.valueOf(270.00))
+                .build();
+
+        var hulkCup = PaymentOrderDTO.builder()
+                .id(3L)
+                .productName("Hulk Cup")
+                .productStockLeft(10)
+                .total(BigDecimal.valueOf(250.00))
+                .build();
+
+        return asList(ironManCup, batmanCup, hulkCup);
     }
 
     private PaymentOrder toCreatedPaymentOrder(Product p, LocalDateTime time) {

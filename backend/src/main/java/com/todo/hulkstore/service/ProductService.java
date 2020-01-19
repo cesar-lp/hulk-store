@@ -1,18 +1,19 @@
 package com.todo.hulkstore.service;
 
-import com.todo.hulkstore.dto.ProductDTO;
+import com.todo.hulkstore.dto.request.ProductRequestDTO;
+import com.todo.hulkstore.dto.response.ProductResponseDTO;
 
 import java.util.List;
 
 public interface ProductService {
 
-    List<ProductDTO> getAllProducts();
+    List<ProductResponseDTO> getAllProducts();
 
-    ProductDTO getProductById(Long id);
+    ProductResponseDTO getProductById(Long id);
 
-    ProductDTO createProduct(ProductDTO newProduct);
+    ProductResponseDTO createProduct(ProductRequestDTO newProduct);
 
-    ProductDTO updateProduct(Long id, ProductDTO updatedProduct);
+    ProductResponseDTO updateProduct(Long id, ProductRequestDTO updatedProduct);
 
     void deleteProductById(Long id);
 }

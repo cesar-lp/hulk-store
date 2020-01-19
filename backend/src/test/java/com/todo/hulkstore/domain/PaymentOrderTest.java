@@ -10,10 +10,24 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class PaymentOrderTest {
 
     @Test
-    void shouldThrowExceptionWhenCreatingPaymentOrderWithInvalidTotal() {
-        var expectedError = "Payment order total cannot be null nor negative.";
+    void shouldThrowExceptionWhenCreatingPaymentOrderWithInvalidProductId() {
+        var expectedError = "Product id has an invalid value.";
 
-        var ex = assertThrows(IllegalArgumentException.class, () -> PaymentOrder.builder().total(null).build());
+        var ex = assertThrows(IllegalArgumentException.class,
+                () -> PaymentOrder.builder().productId(null).build());
+        assertEquals(expectedError, ex.getMessage());
+
+        ex = assertThrows(IllegalArgumentException.class, () ->
+                PaymentOrder.builder().productId(0L).build());
+        assertEquals(expectedError, ex.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenCreatingPaymentOrderWithInvalidTotal() {
+        var expectedError = "Total cannot be null nor negative.";
+
+        var ex = assertThrows(IllegalArgumentException.class,
+                () -> PaymentOrder.builder().total(null).build());
         assertEquals(expectedError, ex.getMessage());
 
         ex = assertThrows(IllegalArgumentException.class, () ->
@@ -23,20 +37,23 @@ public class PaymentOrderTest {
 
     @Test
     void shouldThrowExceptionWhenCreatingPaymentOrderWithInvalidQuantity() {
-        var expectedError = "Payment order quantity cannot be null nor negative.";
+        var expectedError = "Quantity cannot be null nor negative.";
 
-        var ex = assertThrows(IllegalArgumentException.class, () -> PaymentOrder.builder().quantity(null).build());
+        var ex = assertThrows(IllegalArgumentException.class,
+                () -> PaymentOrder.builder().quantity(null).build());
         assertEquals(expectedError, ex.getMessage());
 
-        ex = assertThrows(IllegalArgumentException.class, () -> PaymentOrder.builder().quantity(-25).build());
+        ex = assertThrows(IllegalArgumentException.class,
+                () -> PaymentOrder.builder().quantity(-25).build());
         assertEquals(expectedError, ex.getMessage());
     }
 
     @Test
     void shouldThrowExceptionWhenCreatingPaymentOrderWithInvalidUnitPrice() {
-        var expectedError = "Payment order unit price cannot be null nor negative.";
+        var expectedError = "Unit price cannot be null nor negative.";
 
-        var ex = assertThrows(IllegalArgumentException.class, () -> PaymentOrder.builder().unitPrice(null).build());
+        var ex = assertThrows(IllegalArgumentException.class,
+                () -> PaymentOrder.builder().unitPrice(null).build());
         assertEquals(expectedError, ex.getMessage());
 
         ex = assertThrows(IllegalArgumentException.class,

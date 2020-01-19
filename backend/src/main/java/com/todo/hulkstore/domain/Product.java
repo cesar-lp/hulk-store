@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 
 import static com.todo.hulkstore.utils.ValidationUtils.checkNotNull;
 import static com.todo.hulkstore.utils.ValidationUtils.checkNotNullNorEmpty;
+import static com.todo.hulkstore.utils.ValidationUtils.checkNotNullNorNegative;
 
 @Getter
 @Builder
@@ -38,11 +39,21 @@ public class Product {
     @JoinColumn(name = "product_type_id", nullable = false)
     ProductType productType;
 
+    Integer stock;
+
     BigDecimal price;
+
+    public void removeFromStock(Integer amountToRemove) {
+        checkNotNullNorNegative(amountToRemove, "Amount to remove from stock cannot be null nor negative.");
+        if (amountToRemove > this.stock) {
+            throw new IllegalArgumentException("Amount to remove from stock is greater than available stock.");
+        }
+        this.stock -= amountToRemove;
+    }
 
     public static class ProductBuilder {
         public ProductBuilder name(String name) {
-            checkNotNullNorEmpty(name, "Product name cannot be null nor empty.");
+            checkNotNullNorEmpty(name, "Name cannot be null nor empty.");
             this.name = name;
             return this;
         }
@@ -53,8 +64,14 @@ public class Product {
             return this;
         }
 
+        public ProductBuilder stock(Integer stock) {
+            checkNotNullNorNegative(stock, "Stock cannot be null nor negative.");
+            this.stock = stock;
+            return this;
+        }
+
         public ProductBuilder price(BigDecimal price) {
-            checkNotNull(productType, "Product price cannot be null nor negative.");
+            checkNotNullNorNegative(price, "Price cannot be null nor negative.");
             this.price = price;
             return this;
         }
