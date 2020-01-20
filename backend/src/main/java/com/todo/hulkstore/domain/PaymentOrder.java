@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import static com.todo.hulkstore.utils.ValidationUtils.checkNotNullNorNegative;
+import static com.todo.hulkstore.utils.ValidationUtils.checkValidId;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
@@ -30,14 +31,14 @@ import static com.todo.hulkstore.utils.ValidationUtils.checkNotNullNorNegative;
 public class PaymentOrder {
 
     public PaymentOrder(ProductOrder productOrder) {
-        var total = productOrder
+        var totalPrice = productOrder
                 .getPrice()
                 .multiply(BigDecimal.valueOf(productOrder.getQuantity()));
 
         this.productId = productOrder.getProductId();
         this.quantity = productOrder.getQuantity();
         this.unitPrice = productOrder.getPrice();
-        this.total = total;
+        this.total = totalPrice;
     }
 
     @Id
@@ -59,20 +60,26 @@ public class PaymentOrder {
     private LocalDateTime date;
 
     public static class PaymentOrderBuilder {
+        public PaymentOrderBuilder productId(Long productId) {
+            checkValidId(productId, "Product id has an invalid value.");
+            this.productId = productId;
+            return this;
+        }
+
         public PaymentOrderBuilder quantity(Integer requestedQuantity) {
-            checkNotNullNorNegative(requestedQuantity, "Payment order quantity cannot be null nor negative.");
+            checkNotNullNorNegative(requestedQuantity, "Quantity cannot be null nor negative.");
             this.quantity = requestedQuantity;
             return this;
         }
 
         public PaymentOrderBuilder unitPrice(BigDecimal unitPrice) {
-            checkNotNullNorNegative(unitPrice, "Payment order unit price cannot be null nor negative.");
+            checkNotNullNorNegative(unitPrice, "Unit price cannot be null nor negative.");
             this.unitPrice = unitPrice;
             return this;
         }
 
         public PaymentOrderBuilder total(BigDecimal total) {
-            checkNotNullNorNegative(total, "Payment order total cannot be null nor negative.");
+            checkNotNullNorNegative(total, "Total cannot be null nor negative.");
             this.total = total;
             return this;
         }

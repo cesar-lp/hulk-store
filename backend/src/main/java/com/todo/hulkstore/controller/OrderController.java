@@ -1,7 +1,7 @@
 package com.todo.hulkstore.controller;
 
-
-import com.todo.hulkstore.dto.PaymentOrderRequestDTO;
+import com.todo.hulkstore.dto.PaymentOrderDTO;
+import com.todo.hulkstore.dto.request.PaymentOrderRequestDTO;
 import com.todo.hulkstore.service.PaymentOrderService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -28,7 +30,7 @@ public class OrderController {
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public void registerPayment(@RequestBody PaymentOrderRequestDTO paymentOrderRequestDTO) {
-        paymentOrderService.registerOrder(paymentOrderRequestDTO);
+    public List<PaymentOrderDTO> registerPayment(@RequestBody PaymentOrderRequestDTO paymentOrderRequestDTO) {
+        return paymentOrderService.registerOrder(paymentOrderRequestDTO);
     }
 }

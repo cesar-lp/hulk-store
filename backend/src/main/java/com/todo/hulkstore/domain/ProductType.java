@@ -1,7 +1,7 @@
 package com.todo.hulkstore.domain;
 
 import lombok.AccessLevel;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
@@ -15,8 +15,7 @@ import javax.persistence.Table;
 import static com.todo.hulkstore.utils.ValidationUtils.checkNotNullNorEmpty;
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "product_type")
@@ -35,7 +34,7 @@ public class ProductType {
     String name;
 
     public void setName(String name) {
-        checkNotNullNorEmpty(name, "Product type name cannot be null nor empty.");
+        checkNotNullNorEmpty(name, "Name cannot be null nor empty.");
         this.name = name;
     }
 }

@@ -1,4 +1,4 @@
-package com.todo.hulkstore.dto;
+package com.todo.hulkstore.dto.request;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

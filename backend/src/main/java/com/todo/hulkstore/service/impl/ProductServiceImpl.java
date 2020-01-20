@@ -1,11 +1,14 @@
 package com.todo.hulkstore.service.impl;
 
 import com.todo.hulkstore.converter.ProductConverter;
-import com.todo.hulkstore.dto.ProductDTO;
+import com.todo.hulkstore.domain.Product;
+import com.todo.hulkstore.dto.request.ProductRequestDTO;
+import com.todo.hulkstore.dto.response.ProductResponseDTO;
 import com.todo.hulkstore.exception.ResourceNotFoundException;
 import com.todo.hulkstore.exception.ServiceException;
 import com.todo.hulkstore.repository.ProductRepository;
 import com.todo.hulkstore.service.ProductService;
+import com.todo.hulkstore.service.ProductTypeService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,72 +26,105 @@ public class ProductServiceImpl implements ProductService {
     Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class.getName());
 
     ProductRepository productRepository;
+    ProductTypeService productTypeService;
     ProductConverter converter;
 
+    /**
+     * Retrieves all existing products.
+     *
+     * @return all existing products.
+     */
     @Override
-    public List<ProductDTO> getAllProducts() {
+    public List<ProductResponseDTO> getAllProducts() {
         try {
-            return converter.toProductDTOList(productRepository.findAll());
+            return converter.toProductResponseDTOList(productRepository.findAll());
         } catch (Exception e) {
             logger.error("getAllProducts(): Couldn't retrieve all products.", e);
             throw new ServiceException("Couldn't retrieve all products", e);
         }
     }
 
+    /**
+     * Retrieves a product by a given id.
+     *
+     * @param id product's id.
+     * @return the product found.
+     */
     @Override
-    public ProductDTO getProductById(Long id) {
+    public ProductResponseDTO getProductById(Long id) {
         try {
             var product = productRepository
                     .findById(id)
                     .orElseThrow(() -> {
-                        logger.error("getProductById({}): Product not found.", id);
                         throw new ResourceNotFoundException("Product not found for id " + id);
                     });
 
-            return converter.toProductDTO(product);
+            return converter.toProductResponseDTO(product);
+        } catch (ResourceNotFoundException rnfExc) {
+            logger.error(rnfExc.getMessage());
+            throw rnfExc;
         } catch (Exception e) {
-            if (e instanceof ResourceNotFoundException) throw e;
-
             logger.error("getProductById({}): Couldn't retrieve product", id, e);
             throw new ServiceException("Couldn't retrieve product", e);
         }
     }
 
+    /**
+     * Creates a product.
+     *
+     * @param productRequest product to create.
+     * @return the created product.
+     */
     @Override
-    public ProductDTO createProduct(ProductDTO newProductDTO) {
+    public ProductResponseDTO createProduct(ProductRequestDTO productRequest) {
         try {
-            var newProduct = converter.toProduct(newProductDTO);
-            return converter.toProductDTO(productRepository.save(newProduct));
+            var productTypeId = productRequest.getProductTypeId();
+            var productType = converter
+                    .toProductType(productTypeService.getProductTypeById(productTypeId));
+            var newProduct = converter.toProduct(productRequest, productType);
+
+            return converter.toProductResponseDTO(productRepository.save(newProduct));
         } catch (Exception e) {
-            logger.error("createProduct({}): Couldn't create Product", newProductDTO, e);
+            logger.error("createProduct({}): Couldn't create Product", productRequest, e);
             throw new ServiceException("Couldn't create Product", e);
         }
     }
 
+    /**
+     * Updates a product
+     *
+     * @param id                product's id
+     * @param updatedProductReq product to update
+     * @return the updated product.
+     */
     @Override
-    public ProductDTO updateProduct(Long id, ProductDTO updatedProductDTO) {
+    public ProductResponseDTO updateProduct(Long id, ProductRequestDTO updatedProductReq) {
         try {
-            var updated = converter.toProduct(updatedProductDTO);
-            productRepository.findById(id)
+            var productTypeId = updatedProductReq.getProductTypeId();
+            var productType = converter
+                    .toProductType(productTypeService.getProductTypeById(productTypeId));
+            var updatedProduct = converter.toProduct(updatedProductReq, productType);
+
+            var product = productRepository.findById(id)
                     .orElseThrow(() -> {
-                        logger.error("updateProduct({}, {}): Product not found.", id, updatedProductDTO);
-                        return new ResourceNotFoundException("Product not found for id " + id);
+                        throw new ResourceNotFoundException("Product not found for id " + id);
                     });
 
-            return converter.toProductDTO(productRepository.save(updated));
+            updatedProduct = updateProductDetails(product, updatedProduct);
+            return converter.toProductResponseDTO(productRepository.save(updatedProduct));
+        } catch (ResourceNotFoundException rnfExc) {
+            logger.error(rnfExc.getMessage());
+            throw rnfExc;
         } catch (Exception e) {
-            if (e instanceof ResourceNotFoundException) throw e;
-
-            logger.error("updateProduct({}, {}): Couldn't update product", id, updatedProductDTO, e);
+            logger.error("updateProduct({}, {}): Couldn't update product", id, updatedProductReq, e);
             throw new ServiceException("Couldn't update product", e);
         }
     }
 
     /**
-     * Verification mode will prepend the specified failure message if verification fails with the given implementation.
-     * @param mode Implementation used for verification
-     * @param description The custom failure message
-     * @return VerificationMode
+     * Deletes a product by a given id.
+     *
+     * @param id product's id.
      */
     @Override
     public void deleteProductById(Long id) {
@@ -96,16 +132,25 @@ public class ProductServiceImpl implements ProductService {
             var productToDelete = productRepository
                     .findById(id)
                     .orElseThrow(() -> {
-                        logger.error("deleteProductById({}): Product not found.", id);
-                        return new ResourceNotFoundException("Product not found for id " + id);
+                        throw new ResourceNotFoundException("Product not found for id " + id);
                     });
             productRepository.delete(productToDelete);
+        } catch (ResourceNotFoundException rnfExc) {
+            logger.error(rnfExc.getMessage());
+            throw rnfExc;
         } catch (Exception e) {
-            if (e instanceof ResourceNotFoundException) throw e;
-
             logger.error("deleteProductById({}): couldn't delete product", id, e);
             throw new ServiceException("Couldn't delete product", e);
         }
     }
-}
 
+    private Product updateProductDetails(Product old, Product updated) {
+        return Product.builder()
+                .id(old.getId())
+                .name(updated.getName())
+                .productType(updated.getProductType())
+                .price(updated.getPrice())
+                .stock(updated.getStock())
+                .build();
+    }
+}

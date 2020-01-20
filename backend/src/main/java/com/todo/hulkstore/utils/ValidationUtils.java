@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 
 public class ValidationUtils {
 
+    private ValidationUtils() {
+    }
+
     public static void checkNotNull(Object obj, String errorMessage) {
         if (obj == null) {
             throw new IllegalArgumentException(errorMessage);
@@ -24,6 +27,12 @@ public class ValidationUtils {
 
     public static void checkNotNullNorNegative(Integer value, String errorMessage) {
         if (value == null || value < 0) {
+            throw new IllegalArgumentException(errorMessage);
+        }
+    }
+
+    public static void checkValidId(Long value, String errorMessage) {
+        if (value == null || value <= 0) {
             throw new IllegalArgumentException(errorMessage);
         }
     }

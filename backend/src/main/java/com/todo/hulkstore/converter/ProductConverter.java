@@ -2,8 +2,9 @@ package com.todo.hulkstore.converter;
 
 import com.todo.hulkstore.domain.Product;
 import com.todo.hulkstore.domain.ProductType;
-import com.todo.hulkstore.dto.ProductDTO;
 import com.todo.hulkstore.dto.ProductTypeDTO;
+import com.todo.hulkstore.dto.request.ProductRequestDTO;
+import com.todo.hulkstore.dto.response.ProductResponseDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -14,39 +15,41 @@ import static java.util.stream.Collectors.toList;
 @Component
 public class ProductConverter {
 
-    public ProductDTO toProductDTO(Product source) {
-        if (source == null) {
+    public ProductResponseDTO toProductResponseDTO(Product p) {
+        if (p == null) {
             throw new IllegalArgumentException("Product cannot be null.");
         }
 
-        return ProductDTO.builder()
-                .id(source.getId())
-                .name(source.getName())
-                .productType(toProductTypeDTO(source.getProductType()))
-                .price(source.getPrice())
+        return ProductResponseDTO.builder()
+                .id(p.getId())
+                .name(p.getName())
+                .productType(toProductTypeDTO(p.getProductType()))
+                .stock(p.getStock())
+                .price(p.getPrice())
                 .build();
     }
 
-    public Product toProduct(ProductDTO source) {
-        if (source == null) {
-            throw new IllegalArgumentException("ProductDTO cannot be null.");
+    public Product toProduct(ProductRequestDTO productRequest, ProductType productType) {
+        if (productRequest == null || productType == null) {
+            throw new IllegalArgumentException("ProductRequestDTO nor ProductType cannot be null.");
         }
 
         return Product.builder()
-                .id(source.getId())
-                .name(source.getName())
-                .productType(toProductType(source.getProductType()))
-                .price(source.getPrice())
+                .id(productRequest.getId())
+                .name(productRequest.getName())
+                .productType(productType)
+                .stock(productRequest.getStock())
+                .price(productRequest.getPrice())
                 .build();
     }
 
-    public List<ProductDTO> toProductDTOList(List<Product> source) {
+    public List<ProductResponseDTO> toProductResponseDTOList(List<Product> source) {
         if (source == null || source.isEmpty()) {
             return new ArrayList<>();
         }
 
         return source.stream()
-                .map(this::toProductDTO)
+                .map(this::toProductResponseDTO)
                 .collect(toList());
     }
 
