@@ -60,6 +60,7 @@ public class PaymentOrderServiceImplTest {
         verifyNoMoreInteractions(paymentOrderRepository, productRepository);
     }
 
+    // TODO: improve
     @Test
     void shouldCreatePaymentOrderSuccessfully() {
         var paymentOrderRequest = mockNewPaymentOrderRequestDTO();

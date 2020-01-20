@@ -106,6 +106,7 @@ class ProductServiceImplTest {
         verify(productRepository, times(1)).findById(id);
     }
 
+    // TODO: improve
     @Test
     void shouldCreateProductSuccessfully() {
         var newProductRequest = mockNewProductRequest();
@@ -160,6 +161,7 @@ class ProductServiceImplTest {
         verify(productTypeService, times(1)).getProductTypeById(productTypeId);
     }
 
+    // TODO: improve
     @Test
     void shouldUpdateProductSuccessfully() {
         var productId = 1L;
