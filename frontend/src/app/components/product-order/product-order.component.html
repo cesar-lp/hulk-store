@@ -1,0 +1,44 @@
+<div class="row">
+  <div class="col-md-10">
+    <h2>New orders</h2>
+  </div>
+  <div class="col-md-2">
+    <div class="float-right">
+      <button mat-icon-button title="Add order" (click)="addProductOrder()">
+        <mat-icon class="icon-new">add</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>
+<mat-card [formGroup]="form">
+  <div formArrayName="productOrders" *ngFor="let order of form.get('productOrders')['controls']; let i = index"
+    style="margin: 16px 0">
+    <mat-card [formGroupName]="i">
+      <div class="row">
+        <div class="col-md-3">
+          <mat-form-field>
+            <mat-select matNativeControl name="availableProducts" placeholder="Product" formControlName="productId">
+              <mat-option>None</mat-option>
+              <mat-option *ngFor="let p of availableProducts" [value]="p?.id">{{p?.name}}</mat-option>
+            </mat-select>
+            <mat-error *ngIf="order.get('productId').invalid">Product is required.</mat-error>
+          </mat-form-field>
+        </div>
+        <div class="col-md-3">
+          <mat-form-field>
+            <input matInput placeholder="Quantity" type="number" formControlName="quantity">
+            <mat-error *ngIf="order.get('quantity').invalid">Quantity must be greater than 0.</mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+</mat-card>
+<div class="row float-right buttons-container ">
+  <div class="col-md-12">
+    <button mat-button class="button-cancel" (click)="cancel()">Cancel</button>
+    <button mat-raised-button class="button-primary"
+      [disabled]="form.invalid || !form.get('productOrders')['controls'].length" (click)="createOrder()">Create
+      Order</button>
+  </div>
+</div>

@@ -1,0 +1,83 @@
+.mat-drawer-container {
+    min-height: 100%;
+    background-color: white;
+}
+
+.container {
+    padding-top: 5%;
+    color: #424242;
+}
+
+table {
+    width: 100%;
+}
+
+.mat-table tbody {
+    background-color: white;
+}
+
+td.mat-cell {
+    color: #424242;
+}
+
+.icon-new {
+    color: #4db6ac;
+}
+
+.icon-edit {
+    color: #26c6da;
+}
+
+.icon-delete {
+    color: #ef5350;
+}
+
+.snackbar-success {
+    color: white;
+    background-color: #4db6ac;
+}
+
+.buttons-container {
+    margin-top: 16px;
+}
+
+.button-primary {
+    background-color: #4db6ac;
+    color: white;
+}
+
+.mat-raised-button[disabled][disabled]  {
+    background-color: #4db6ac;
+    opacity: 0.6;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type=number] {
+    -moz-appearance:textfield; /* Firefox */
+}
+
+.mat-card {
+    background-color: white;
+    color: #424242;
+}
+
+.mat-form-field,
+.mat-form-field-empty.mat-form-field-label,
+.mat-form-field-underline,
+.mat-form-field-appearance-legacy .mat-form-field-label {
+    color: #424242;
+}
+
+.mat-form-field-appearance-legacy .mat-form-field-underline {
+    background-color: #424242;
+}
+
+.mat-select-value {
+    color: #424242;
+}
