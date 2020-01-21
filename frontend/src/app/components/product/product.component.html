@@ -1,0 +1,45 @@
+<mat-card [formGroup]="productForm">
+  <mat-card-title>{{title}}</mat-card-title>
+  <mat-card-subtitle>Details</mat-card-subtitle>
+  <div class="row">
+    <div class="col-md-3">
+      <mat-form-field>
+        <input matInput placeholder="Name" formControlName="name">
+        <mat-error *ngIf="productForm.get('name').hasError('required')">Name is required</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="col-md-3">
+      <mat-form-field>
+        <mat-select matNativeControl placeholder="Product type" formControlName="productTypeId">
+          <mat-option>None</mat-option>
+          <mat-option *ngFor="let type of productTypes" [value]="type?.id">{{type?.name}}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="productForm.get('productTypeId').hasError('required')">Product type is required</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="col-md-3">
+      <mat-form-field>
+        <input matInput placeholder="Price" type="number" formControlName="price">
+        <mat-error *ngIf="productForm.get('price').hasError('required')">Price is required</mat-error>
+        <mat-error *ngIf="productForm.get('price').hasError('min')">Price cannot be negative</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="col-md-3">
+      <mat-form-field>
+        <input matInput placeholder="Stock" type="number" formControlName="stock">
+        <mat-error *ngIf="productForm.get('stock').hasError('required')">Stock is required</mat-error>
+        <mat-error *ngIf="productForm.get('stock').hasError('min')">Stock cannot be negative</mat-error>
+      </mat-form-field>
+    </div>
+  </div>
+</mat-card>
+<div class="row float-right buttons-container ">
+  <div class="col-md-12">
+    <button mat-button class="button-cancel" (click)="handleReturnToPreviousPage()">Go back</button>
+    <button mat-raised-button class="button-primary" [disabled]="productForm.invalid"
+      (click)="handleProduct()">{{mainButtonText}}</button>
+  </div>
+</div>

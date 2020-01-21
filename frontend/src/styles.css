@@ -1,0 +1,132 @@
+.mat-drawer-container {
+    min-height: 100%;
+    background-color: white;
+}
+
+.container {
+    padding-top: 5%;
+    color: #424242;
+}
+
+table {
+    width: 100%;
+}
+
+.mat-table tbody {
+    background-color: white;
+}
+
+td.mat-cell {
+    color: #424242;
+}
+
+.icon-new {
+    color: #4db6ac;
+}
+
+.icon-edit {
+    color: #26c6da;
+}
+
+.icon-delete {
+    color: #ef5350;
+}
+
+.snackbar-success {
+    color: white;
+    background-color: #4db6ac;
+}
+
+.buttons-container {
+    margin-top: 16px;
+}
+
+.button-primary {
+    background-color: #4db6ac;
+    color: white;
+}
+
+.mat-raised-button[disabled][disabled]{
+    background-color: #4db6ac;
+    opacity: 0.6;
+}
+
+.mat-button[disabled][disabled].btn-basic.btn-primary {
+    color: #4db6ac;
+    opacity: 0.4;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type=number] {
+    -moz-appearance:textfield; /* Firefox */
+}
+
+.mat-card,
+.mat-card-subtitle {
+    background-color: white;
+    color: #424242;
+}
+
+.mat-form-field,
+.mat-form-field-empty.mat-form-field-label,
+.mat-form-field-underline,
+.mat-form-field-appearance-legacy .mat-form-field-label {
+    color: #424242;
+}
+
+.mat-form-field-appearance-legacy .mat-form-field-underline {
+    background-color: #424242;
+}
+
+.mat-select-value {
+    color: #424242;
+}
+
+.mat-dialog-container {
+  color: #424242;
+  background-color: white;
+}
+
+.btn-basic.btn-primary {
+  background-color: white;
+  color: #4db6ac;
+}
+
+.mat-select-arrow {
+  color: #424242;
+}
+
+.mat-select-option {
+  background-color: thistle;
+}
+
+.mat-form-field.mat-focused .mat-form-field-label {
+  color: #3babb1;
+}
+
+.mat-form-field.mat-focused .mat-form-field-ripple {
+  background-color: #3babb1;
+}
+
+.mat-form-field.mat-form-field-invalid .mat-form-field-label {
+  color: #f44336;
+}
+
+.mat-form-field.mat-form-field-invalid .mat-form-field-ripple {
+  background-color: #f44336;
+}
+
+.mat-input-element:disabled {
+  color: #424242;
+  opacity: 40%;
+}
+
+button[disabled] {
+  opacity: 0.4;
+}

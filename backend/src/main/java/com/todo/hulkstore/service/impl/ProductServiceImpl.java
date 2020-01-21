@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -35,9 +36,19 @@ public class ProductServiceImpl implements ProductService {
      * @return all existing products.
      */
     @Override
-    public List<ProductResponseDTO> getAllProducts() {
+    public List<ProductResponseDTO> getAllProducts(Optional<Boolean> inStock) {
         try {
-            return converter.toProductResponseDTOList(productRepository.findAll());
+            List<Product> productsFound;
+
+            if (inStock.isPresent()) {
+                productsFound = inStock.get()
+                        ? productRepository.retrieveProductsInStock()
+                        : productRepository.retrieveProductsWithoutStock();
+            } else {
+                productsFound = productRepository.findAll();
+            }
+
+            return converter.toProductResponseDTOList(productsFound);
         } catch (Exception e) {
             logger.error("getAllProducts(): Couldn't retrieve all products.", e);
             throw new ServiceException("Couldn't retrieve all products", e);

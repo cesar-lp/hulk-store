@@ -1,6 +1,6 @@
 package com.todo.hulkstore.exception.error;
 
-import com.todo.hulkstore.dto.pojo.ProductOrder;
+import com.todo.hulkstore.domain.ProductOrder;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +19,7 @@ public class InvalidProductOrderError implements Serializable {
 
     public InvalidProductOrderError(ProductOrder productOrder, Integer availableStock) {
         this.id = productOrder.getProductId();
-        this.name = productOrder.getName();
+        this.name = productOrder.getProductName();
         this.requestedQuantity = productOrder.getQuantity();
         this.stock = availableStock;
     }

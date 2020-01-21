@@ -1,0 +1,27 @@
+<mat-toolbar>
+  <button mat-icon-button (click)="toggleDrawer()">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+  <button mat-button class="no-hover-effect" (click)="goHome()">
+    Hulk store
+  </button>
+</mat-toolbar>
+<mat-drawer-container class="example-container">
+
+  <mat-drawer mode="side" [(opened)]="isDrawerOpen">
+    <mat-list>
+      <mat-list-item (click)="navigateToProducts()">Products</mat-list-item>
+      <mat-divider></mat-divider>
+      <mat-list-item (click)="navigateToProductTypes()">Product Types</mat-list-item>
+      <mat-divider></mat-divider>
+      <mat-list-item (click)="navigateToOrders()">Orders</mat-list-item>
+    </mat-list>
+  </mat-drawer>
+  <mat-drawer-content style="background: white">
+    <div class="container">
+      <div class="col-md-12">
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+  </mat-drawer-content>
+</mat-drawer-container>
