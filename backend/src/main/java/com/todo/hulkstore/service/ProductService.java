@@ -4,10 +4,11 @@ import com.todo.hulkstore.dto.request.ProductRequestDTO;
 import com.todo.hulkstore.dto.response.ProductResponseDTO;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductService {
 
-    List<ProductResponseDTO> getAllProducts();
+    List<ProductResponseDTO> getAllProducts(Optional<Boolean> inStock);
 
     ProductResponseDTO getProductById(Long id);
 

@@ -10,7 +10,7 @@
     </div>
   </div>
 </div>
-<table mat-table [dataSource]="productTypes" class="mat-elevation-z8">
+<table mat-table [dataSource]="paymentOrders" class="mat-elevation-z8">
   <ng-container matColumnDef="id">
     <th mat-header-cell *matHeaderCellDef> ID </th>
     <td mat-cell *matCellDef="let element"> {{element?.id}} </td>
@@ -18,22 +18,12 @@
 
   <ng-container matColumnDef="date">
     <th mat-header-cell *matHeaderCellDef> Date </th>
-    <td mat-cell *matCellDef="let element"> {{element?.date}} </td>
+    <td mat-cell *matCellDef="let element"> {{element?.dateTime}} </td>
   </ng-container>
 
-  <ng-container matColumnDef="productName">
-    <th mat-header-cell *matHeaderCellDef> Product </th>
-    <td mat-cell *matCellDef="let element"> {{element?.productName}} </td>
-  </ng-container>
-
-  <ng-container matColumnDef="quantity">
-    <th mat-header-cell *matHeaderCellDef> Quantity </th>
-    <td mat-cell *matCellDef="let element"> {{element?.quantity}} </td>
-  </ng-container>
-
-  <ng-container matColumnDef="price">
-    <th mat-header-cell *matHeaderCellDef> Price </th>
-    <td mat-cell *matCellDef="let element"> {{element?.price}} </td>
+  <ng-container matColumnDef="productsAmount">
+    <th mat-header-cell *matHeaderCellDef> Amount of products </th>
+    <td mat-cell *matCellDef="let element"> {{element?.productOrders?.length }} </td>
   </ng-container>
 
   <ng-container matColumnDef="total">
@@ -41,6 +31,19 @@
     <td mat-cell *matCellDef="let element"> {{element?.total}} </td>
   </ng-container>
 
-  <tr mat-header-row *matHeaderRowDef="displayedProductOrdersColumns"></tr>
-  <tr mat-row *matRowDef="let row; columns: displayedProductOrdersColumns;"></tr>
+  <!--
+  <ng-container matColumnDef="expandedDetail">
+    <mat-cell *matCellDef="let detail">
+      The symbol for {{detail?.element?.name}} is {{detail?.element?.symbol}}
+    </mat-cell>
+  </ng-container>
+  -->
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;" matRipple class="element-row"
+    [class.expanded]="expandedElement == row" (click)="expandedElement = row"></tr>
+  <!--
+  <tr mat-row *matRowDef="let row; columns: ['expandedDetail']; when: isExpansionDetailRow"
+    [@detailExpand]="row.element == expandedElement ? 'expanded' : 'collapsed'" style="overflow: hidden"></tr>
+  -->
 </table>

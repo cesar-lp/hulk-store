@@ -27,7 +27,7 @@ import { ProductOrderComponent } from './components/product-order/product-order.
     ProductTypeListComponent,
     ProductTypeDialogComponent,
     ProductOrderListComponent,
-    ProductOrderComponent
+    ProductOrderComponent,
   ],
   imports: [
     BrowserModule,
@@ -41,7 +41,13 @@ import { ProductOrderComponent } from './components/product-order/product-order.
   ],
   providers: [
     { provide: MAT_DIALOG_DATA, useValue: {} },
-    { provide: MAT_SNACK_BAR_DEFAULT_OPTIONS, useValue: { duration: 2500 } },
+    {
+      provide: MAT_SNACK_BAR_DEFAULT_OPTIONS, useValue: {
+        duration: 2500,
+        horizontalPosition: 'right',
+        verticalPosition: 'top'
+      }
+    },
     { provide: HTTP_INTERCEPTORS, useClass: StoreHTTPInterceptor, multi: true }
   ],
   entryComponents: [

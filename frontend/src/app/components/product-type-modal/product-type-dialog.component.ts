@@ -35,6 +35,10 @@ export class ProductTypeDialogComponent implements OnInit {
     }
   }
 
+  cancel() {
+    this.dialogRef.close(null);
+  }
+
   saveProductType() {
     const productType = {
       id: this.form.get('id').value,

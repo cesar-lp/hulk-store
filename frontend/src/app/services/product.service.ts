@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { Product } from '../models/product';
@@ -17,7 +17,9 @@ export class ProductService {
   }
 
   getAvailableProducts(): Observable<Product[]> {
-    return this.httpService.get<Product[]>(this.baseUrl + '/availables');
+    let params = new HttpParams();
+    params = params.append('inStock', 'true');
+    return this.httpService.get<Product[]>(this.baseUrl, { params });
   }
 
   getProductById(id: number): Observable<Product> {

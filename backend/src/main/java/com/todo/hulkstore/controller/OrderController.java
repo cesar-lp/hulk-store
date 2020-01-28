@@ -1,13 +1,14 @@
 package com.todo.hulkstore.controller;
 
-import com.todo.hulkstore.dto.PaymentOrderDTO;
 import com.todo.hulkstore.dto.request.PaymentOrderRequestDTO;
+import com.todo.hulkstore.dto.response.PaymentOrderResponseDTO;
 import com.todo.hulkstore.service.PaymentOrderService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,9 +29,15 @@ public class OrderController {
 
     PaymentOrderService paymentOrderService;
 
+    @GetMapping("")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PaymentOrderResponseDTO> getAllOrders() {
+        return paymentOrderService.getAllPaymentOrders();
+    }
+
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public List<PaymentOrderDTO> registerPayment(@RequestBody PaymentOrderRequestDTO paymentOrderRequestDTO) {
-        return paymentOrderService.registerOrder(paymentOrderRequestDTO);
+    public PaymentOrderResponseDTO registerPaymentOrder(@RequestBody PaymentOrderRequestDTO paymentOrderRequestDTO) {
+        return paymentOrderService.registerPaymentOrder(paymentOrderRequestDTO);
     }
 }

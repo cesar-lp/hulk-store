@@ -46,9 +46,14 @@ td.mat-cell {
     color: white;
 }
 
-.mat-raised-button[disabled][disabled]  {
+.mat-raised-button[disabled][disabled]{
     background-color: #4db6ac;
     opacity: 0.6;
+}
+
+.mat-button[disabled][disabled].btn-basic.btn-primary {
+    color: #4db6ac;
+    opacity: 0.4;
 }
 
 input::-webkit-outer-spin-button,
@@ -62,7 +67,8 @@ input[type=number] {
     -moz-appearance:textfield; /* Firefox */
 }
 
-.mat-card {
+.mat-card,
+.mat-card-subtitle {
     background-color: white;
     color: #424242;
 }
@@ -80,4 +86,47 @@ input[type=number] {
 
 .mat-select-value {
     color: #424242;
+}
+
+.mat-dialog-container {
+  color: #424242;
+  background-color: white;
+}
+
+.btn-basic.btn-primary {
+  background-color: white;
+  color: #4db6ac;
+}
+
+.mat-select-arrow {
+  color: #424242;
+}
+
+.mat-select-option {
+  background-color: thistle;
+}
+
+.mat-form-field.mat-focused .mat-form-field-label {
+  color: #3babb1;
+}
+
+.mat-form-field.mat-focused .mat-form-field-ripple {
+  background-color: #3babb1;
+}
+
+.mat-form-field.mat-form-field-invalid .mat-form-field-label {
+  color: #f44336;
+}
+
+.mat-form-field.mat-form-field-invalid .mat-form-field-ripple {
+  background-color: #f44336;
+}
+
+.mat-input-element:disabled {
+  color: #424242;
+  opacity: 40%;
+}
+
+button[disabled] {
+  opacity: 0.4;
 }

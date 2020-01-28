@@ -3,12 +3,12 @@
   <div [formGroup]="form">
     <mat-form-field>
       <input matInput placeholder="Name" formControlName="name">
-      <mat-error *ngIf="form.get('name').invalid">Name is required</mat-error>
+      <mat-error *ngIf="form.get('name').hasError('required')">Name is required</mat-error>
     </mat-form-field>
   </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close>Cancel</button>
-  <button mat-button [mat-dialog-close]="true" cdkFocusInitial
+  <button mat-button mat-dialog-close (cancel)="cancel()">Cancel</button>
+  <button mat-button [mat-dialog-close]="true" class="btn-basic btn-primary" [disabled]="form.invalid"
     (click)="saveProductType()">{{data.primaryButtonText}}</button>
 </mat-dialog-actions>

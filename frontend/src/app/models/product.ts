@@ -6,4 +6,6 @@ export interface Product {
   productType: ProductType;
   stock: number;
   price: number;
+
+  isSelected: boolean;
 }

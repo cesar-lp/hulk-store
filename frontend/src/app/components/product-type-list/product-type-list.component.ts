@@ -38,9 +38,11 @@ export class ProductTypeListComponent {
 
     dialog
       .afterClosed()
-      .subscribe(createdProductType => {
-        this.productTypes.push(createdProductType);
-        this.productTypes = this.productTypes.slice();
+      .subscribe((createdProductType: ProductType) => {
+        if (createdProductType) {
+          this.productTypes.push(createdProductType);
+          this.productTypes = this.productTypes.slice();
+        }
       });
   }
 
@@ -55,10 +57,12 @@ export class ProductTypeListComponent {
 
     dialog
       .afterClosed()
-      .subscribe(updatedProductType => {
-        const i = this.productTypes.findIndex(productType => productType.id == updatedProductType.id);
-        this.productTypes[i] = updatedProductType;
-        this.productTypes = this.productTypes.slice();
+      .subscribe((updatedProductType: ProductType) => {
+        if (updatedProductType) {
+          const i = this.productTypes.findIndex(productType => productType.id == updatedProductType.id);
+          this.productTypes[i] = updatedProductType;
+          this.productTypes = this.productTypes.slice();
+        }
       });
   }
 

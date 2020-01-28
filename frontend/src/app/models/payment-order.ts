@@ -1,7 +1,14 @@
 export interface PaymentOrder {
   id: number;
-  productId: number;
-  productName: string;
+  dateTime: string;
+  productOrders: ProductOrder[];
   total: number;
-  productStockLeft: number;
+}
+
+export interface ProductOrder {
+  id: number;
+  productName: string;
+  productPrice: number;
+  quantity: number;
+  total: number;
 }

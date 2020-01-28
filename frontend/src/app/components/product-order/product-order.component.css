@@ -1,0 +1,48 @@
+tr.mat-row {
+  height: 64px;
+}
+
+/*@mixin mat-table-columns($columns)
+{
+    .mat-column-
+    {
+        @each $colName, $props in $columns {
+
+            $width: map-get($props, 'width');
+
+            &#{$colName} 
+            {
+                flex: $width;
+                min-width: $width;
+
+                @if map-has-key($props, 'color') 
+                {
+                    color: map-get($props, 'color');
+                }
+            }  
+        }
+    }
+}
+
+@include mat-table-columns((
+
+    orderid: (width: 6rem, color: gray),
+    date: (width: 9rem),
+    items: (width: 20rem)
+
+));
+
+this generates something like 
+
+.mat-column-orderid[_ngcontent-c15] {
+  flex: 6rem;
+  min-width: 6rem;
+  color: gray; }
+
+.mat-column-date[_ngcontent-c15] {
+  flex: 9rem;
+  min-width: 9rem; }
+
+
+
+*/

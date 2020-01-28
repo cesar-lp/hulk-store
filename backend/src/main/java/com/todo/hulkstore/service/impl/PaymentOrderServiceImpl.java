@@ -3,10 +3,10 @@ package com.todo.hulkstore.service.impl;
 import com.todo.hulkstore.converter.PaymentOrderConverter;
 import com.todo.hulkstore.domain.PaymentOrder;
 import com.todo.hulkstore.domain.Product;
-import com.todo.hulkstore.dto.PaymentOrderDTO;
-import com.todo.hulkstore.dto.pojo.ProductOrder;
+import com.todo.hulkstore.domain.ProductOrder;
 import com.todo.hulkstore.dto.request.PaymentOrderRequestDTO;
 import com.todo.hulkstore.dto.request.ProductOrderRequestDTO;
+import com.todo.hulkstore.dto.response.PaymentOrderResponseDTO;
 import com.todo.hulkstore.exception.InvalidProductOrderException;
 import com.todo.hulkstore.exception.ResourceNotFoundException;
 import com.todo.hulkstore.exception.ServiceException;
@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,13 +39,26 @@ public class PaymentOrderServiceImpl implements PaymentOrderService {
     ProductRepository productRepository;
 
     /**
+     * Returns existing payment orders.
+     *
+     * @return existing payment orders.
+     */
+    @Override
+    public List<PaymentOrderResponseDTO> getAllPaymentOrders() {
+        return paymentOrderRepository.findAll()
+                .stream()
+                .map(converter::toPaymentOrderResponseDTO)
+                .collect(toList());
+    }
+
+    /**
      * Registers a payment order.
      *
      * @param paymentOrderRequest payment order request.
      * @return the created payment order.
      */
     @Override
-    public List<PaymentOrderDTO> registerOrder(PaymentOrderRequestDTO paymentOrderRequest) {
+    public PaymentOrderResponseDTO registerPaymentOrder(PaymentOrderRequestDTO paymentOrderRequest) {
         try {
             var productIds = paymentOrderRequest.getProductOrders()
                     .stream()
@@ -57,15 +71,19 @@ public class PaymentOrderServiceImpl implements PaymentOrderService {
 
             handleProductOrders(productOrders, products);
 
-            var paymentOrders = productOrders
-                    .stream()
-                    .map(PaymentOrder::new)
-                    .collect(toList());
+            var paymentOrderTotal = productOrders.stream()
+                    .map(ProductOrder::getTotal)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            var paymentOrder = PaymentOrder.builder()
+                    .productOrders(productOrders)
+                    .total(paymentOrderTotal)
+                    .build();
 
             productRepository.saveAll(products);
-            paymentOrderRepository.saveAll(paymentOrders);
+            paymentOrderRepository.save(paymentOrder);
 
-            return converter.toPaymentOrderDTOList(paymentOrders, products);
+            return converter.toPaymentOrderResponseDTO(paymentOrder);
         } catch (ResourceNotFoundException rnfExc) {
             logger.error(rnfExc.getMessage());
             throw rnfExc;
@@ -81,6 +99,7 @@ public class PaymentOrderServiceImpl implements PaymentOrderService {
     private List<ProductOrder> zipToProductOrder(
             List<ProductOrderRequestDTO> productOrderReq, List<Product> products) {
         var productOrders = new ArrayList<ProductOrder>();
+
         for (var poReq : productOrderReq) {
             var orderProductId = poReq.getProductId();
             var orderQuantity = poReq.getQuantity();
@@ -89,10 +108,21 @@ public class PaymentOrderServiceImpl implements PaymentOrderService {
                     .filter(p -> p.getId().equals(orderProductId))
                     .findFirst()
                     .ifPresentOrElse(
-                            p -> productOrders.add(ProductOrder.getFor(p, orderQuantity)),
+                            p -> productOrders.add(buildProductOrder(p, orderQuantity)),
                             () -> handleProductNotFound(orderProductId));
         }
+
         return productOrders;
+    }
+
+    private ProductOrder buildProductOrder(Product p, Integer quantity) {
+        return ProductOrder.builder()
+                .productId(p.getId())
+                .productName(p.getName())
+                .productPrice(p.getPrice())
+                .quantity(quantity)
+                .total(p.getPrice().multiply(BigDecimal.valueOf(quantity)))
+                .build();
     }
 
     private void handleProductNotFound(Long id) {
