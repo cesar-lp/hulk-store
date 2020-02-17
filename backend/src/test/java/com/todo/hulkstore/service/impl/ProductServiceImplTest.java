@@ -1,13 +1,14 @@
 package com.todo.hulkstore.service.impl;
 
-import com.todo.hulkstore.converter.ProductConverter;
 import com.todo.hulkstore.domain.Product;
 import com.todo.hulkstore.domain.ProductType;
 import com.todo.hulkstore.dto.ProductTypeDTO;
-import com.todo.hulkstore.dto.request.ProductRequestDTO;
-import com.todo.hulkstore.dto.response.ProductResponseDTO;
+import com.todo.hulkstore.dto.request.ProductRequest;
+import com.todo.hulkstore.dto.response.ProductResponse;
 import com.todo.hulkstore.exception.ResourceNotFoundException;
 import com.todo.hulkstore.exception.ServiceException;
+import com.todo.hulkstore.mapper.ProductMapper;
+import com.todo.hulkstore.mapper.ProductTypeMapper;
 import com.todo.hulkstore.repository.ProductRepository;
 import com.todo.hulkstore.service.ProductTypeService;
 import lombok.AccessLevel;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,7 +44,10 @@ class ProductServiceImplTest {
     ProductRepository productRepository;
 
     @Mock
-    ProductConverter productConverter;
+    ProductMapper productMapper;
+
+    @Mock
+    ProductTypeMapper productTypeMapper;
 
     @Mock
     ProductTypeService productTypeService;
@@ -52,38 +57,57 @@ class ProductServiceImplTest {
 
     @AfterEach
     void runAfterEach() {
-        verifyNoMoreInteractions(productConverter, productRepository);
+        verifyNoMoreInteractions(productMapper, productTypeMapper, productTypeService, productRepository);
     }
 
     @Test
     void shouldGetAllProductsSuccessfully() {
         var existingProducts = mockExistingProducts();
-        var expectedProductsToRetrieve = mockExistingProductsResponseDTO();
+        var expectedProductsToRetrieve = mockExistingProductsResponse();
 
         when(productRepository.findAll())
                 .thenReturn(existingProducts);
 
-        when(productConverter.toProductResponseDTOList(existingProducts))
+        when(productMapper.toProductResponseList(existingProducts))
                 .thenReturn(expectedProductsToRetrieve);
 
-        var actualProductsRetrieved = productService.getAllProducts();
+        var actualProductsRetrieved = productService.getAllProducts(Optional.empty());
 
         assertThat(actualProductsRetrieved, samePropertyValuesAs(expectedProductsToRetrieve));
 
         verify(productRepository, times(1)).findAll();
-        verify(productConverter, times(1)).toProductResponseDTOList(existingProducts);
+        verify(productMapper, times(1)).toProductResponseList(existingProducts);
+    }
+
+    @Test
+    void shouldGetProductsByStockConditionSuccessfully() {
+        var productsInStock = mockProductsInStock();
+        var expectedProductsInStockToRetrieve = mockProductsInStockResponse();
+
+        when(productRepository.retrieveProductsByStockCondition(true))
+                .thenReturn(productsInStock);
+
+        when(productMapper.toProductResponseList(productsInStock))
+                .thenReturn(expectedProductsInStockToRetrieve);
+
+        var actualProductsRetrieved = productService.getAllProducts(Optional.of(true));
+
+        assertThat(actualProductsRetrieved, samePropertyValuesAs(expectedProductsInStockToRetrieve));
+
+        verify(productRepository, times(1)).retrieveProductsByStockCondition(true);
+        verify(productMapper, times(1)).toProductResponseList(productsInStock);
     }
 
     @Test
     void shouldGetProductByIdSuccessfully() {
         var id = 1L;
         var existingProduct = mockExistingProduct();
-        var expectedProductToRetrieve = mockExistingProductResponseDTO();
+        var expectedProductToRetrieve = mockExistingProductResponse();
 
         when(productRepository.findById(id))
                 .thenReturn(Optional.of((existingProduct)));
 
-        when(productConverter.toProductResponseDTO(existingProduct))
+        when(productMapper.toProductResponse(existingProduct))
                 .thenReturn(expectedProductToRetrieve);
 
         var actualProductRetrieved = productService.getProductById(id);
@@ -91,7 +115,7 @@ class ProductServiceImplTest {
         assertThat(actualProductRetrieved, samePropertyValuesAs(expectedProductToRetrieve));
 
         verify(productRepository, times(1)).findById(1L);
-        verify(productConverter, times(1)).toProductResponseDTO(existingProduct);
+        verify(productMapper, times(1)).toProductResponse(existingProduct);
     }
 
     @Test
@@ -106,32 +130,36 @@ class ProductServiceImplTest {
         verify(productRepository, times(1)).findById(id);
     }
 
-    // TODO: improve
     @Test
     void shouldCreateProductSuccessfully() {
         var newProductRequest = mockNewProductRequest();
-        var newProduct = getNewProductMock();
+        var newProduct = mockNewProduct();
 
         var productTypeId = 1L;
-        var productType = new ProductType(1L, "Cups");
+
+        var productType = ProductType.builder()
+                .id(1L)
+                .name("Cups")
+                .build();
+
         var productTypeDTO = new ProductTypeDTO(1L, "Cups");
 
         var createdProduct = mockExistingProduct();
-        var expectedProductToBeCreated = mockExistingProductResponseDTO();
+        var expectedProductToBeCreated = mockExistingProductResponse();
 
         when(productTypeService.getProductTypeById(productTypeId))
                 .thenReturn(productTypeDTO);
 
-        when(productConverter.toProductType(productTypeDTO))
+        when(productTypeMapper.toProductType(productTypeDTO))
                 .thenReturn(productType);
 
-        when(productConverter.toProduct(newProductRequest, productType))
+        when(productMapper.toProduct(newProductRequest, productType))
                 .thenReturn(newProduct);
 
         when(productRepository.save(newProduct))
                 .thenReturn(createdProduct);
 
-        when(productConverter.toProductResponseDTO(createdProduct))
+        when(productMapper.toProductResponse(createdProduct))
                 .thenReturn(expectedProductToBeCreated);
 
         var actualProductCreated = productService.createProduct(newProductRequest);
@@ -139,10 +167,10 @@ class ProductServiceImplTest {
         assertThat(actualProductCreated, samePropertyValuesAs(expectedProductToBeCreated));
 
         verify(productTypeService, times(1)).getProductTypeById(productTypeId);
-        verify(productConverter, times(1)).toProductType(productTypeDTO);
-        verify(productConverter, times(1)).toProduct(newProductRequest, productType);
+        verify(productTypeMapper, times(1)).toProductType(productTypeDTO);
+        verify(productMapper, times(1)).toProduct(newProductRequest, productType);
         verify(productRepository, times(1)).save(any(Product.class));
-        verify(productConverter, times(1)).toProductResponseDTO(any(Product.class));
+        verify(productMapper, times(1)).toProductResponse(any(Product.class));
     }
 
     @Test
@@ -161,7 +189,6 @@ class ProductServiceImplTest {
         verify(productTypeService, times(1)).getProductTypeById(productTypeId);
     }
 
-    // TODO: improve
     @Test
     void shouldUpdateProductSuccessfully() {
         var productId = 1L;
@@ -169,7 +196,10 @@ class ProductServiceImplTest {
         var productToUpdate = mockProductToUpdate();
 
         var productTypeId = 1L;
-        var productType = new ProductType(1L, "Cups");
+        var productType = ProductType.builder()
+                .id(1L)
+                .name("Cups")
+                .build();
         var productTypeDTO = new ProductTypeDTO(1L, "Cups");
 
         var existingProduct = mockExistingProduct();
@@ -178,10 +208,10 @@ class ProductServiceImplTest {
         when(productTypeService.getProductTypeById(productTypeId))
                 .thenReturn(productTypeDTO);
 
-        when(productConverter.toProductType(productTypeDTO))
+        when(productTypeMapper.toProductType(productTypeDTO))
                 .thenReturn(productType);
 
-        when(productConverter.toProduct(updateProductRequest, productType))
+        when(productMapper.toProduct(updateProductRequest, productType))
                 .thenReturn(productToUpdate);
 
         when(productRepository.findById(productId))
@@ -190,7 +220,7 @@ class ProductServiceImplTest {
         when(productRepository.save(any(Product.class)))
                 .thenReturn(existingProduct);
 
-        when(productConverter.toProductResponseDTO(any(Product.class)))
+        when(productMapper.toProductResponse(any(Product.class)))
                 .thenReturn(expectedProductToBeUpdated);
 
         var actualProductUpdated = productService.updateProduct(productId, updateProductRequest);
@@ -198,11 +228,11 @@ class ProductServiceImplTest {
         assertThat(actualProductUpdated, samePropertyValuesAs(expectedProductToBeUpdated));
 
         verify(productTypeService, times(1)).getProductTypeById(productTypeId);
-        verify(productConverter, times(1)).toProductType(productTypeDTO);
-        verify(productConverter, times(1)).toProduct(updateProductRequest, productType);
+        verify(productTypeMapper, times(1)).toProductType(productTypeDTO);
+        verify(productMapper, times(1)).toProduct(updateProductRequest, productType);
         verify(productRepository, times(1)).findById(productId);
         verify(productRepository, times(1)).save(any(Product.class));
-        verify(productConverter, times(1)).toProductResponseDTO(any(Product.class));
+        verify(productMapper, times(1)).toProductResponse(any(Product.class));
     }
 
     @Test
@@ -226,7 +256,11 @@ class ProductServiceImplTest {
     void shouldThrowExceptionWhenUpdatingNonExistingProduct() {
         var id = 99L;
         var productTypeId = 1L;
-        var productType = new ProductType(productTypeId, "Cups");
+        var productType = ProductType.builder()
+                .id(productTypeId)
+                .name("Cups")
+                .build();
+
         var productTypeDTO = new ProductTypeDTO(productTypeId, "Cups");
         var updateProductRequest = mockUpdateProductRequest();
         var productToUpdate = mockExistingProduct();
@@ -234,10 +268,10 @@ class ProductServiceImplTest {
         when(productTypeService.getProductTypeById(productTypeId))
                 .thenReturn(productTypeDTO);
 
-        when(productConverter.toProductType(productTypeDTO))
+        when(productTypeMapper.toProductType(productTypeDTO))
                 .thenReturn(productType);
 
-        when(productConverter.toProduct(updateProductRequest, productType))
+        when(productMapper.toProduct(updateProductRequest, productType))
                 .thenReturn(productToUpdate);
 
         when(productRepository.findById(id))
@@ -247,8 +281,8 @@ class ProductServiceImplTest {
                 () -> productService.updateProduct(id, updateProductRequest));
 
         verify(productTypeService, times(1)).getProductTypeById(productTypeId);
-        verify(productConverter, times(1)).toProductType(productTypeDTO);
-        verify(productConverter, times(1)).toProduct(updateProductRequest, productType);
+        verify(productTypeMapper, times(1)).toProductType(productTypeDTO);
+        verify(productMapper, times(1)).toProduct(updateProductRequest, productType);
         verify(productRepository, times(1)).findById(id);
     }
 
@@ -275,26 +309,37 @@ class ProductServiceImplTest {
         verify(productRepository, times(1)).findById(id);
     }
 
-    private Product getNewProductMock() {
+    private Product mockNewProduct() {
+        var cup = ProductType.builder()
+                .id(1L)
+                .name("Cup")
+                .build();
+
         return Product.builder()
                 .name("Iron Man Cup")
-                .productType(new ProductType(1L, "Cup"))
+                .productType(cup)
                 .price(BigDecimal.valueOf(25.00))
+                .stock(25)
                 .build();
     }
 
     private Product mockExistingProduct() {
+        var cup = ProductType.builder()
+                .id(1L)
+                .name("Cup")
+                .build();
+
         return Product.builder()
                 .id(1L)
                 .name("Iron Man Cup")
-                .productType(new ProductType(1L, "Cup"))
+                .productType(cup)
                 .stock(25)
                 .price(BigDecimal.valueOf(25.00))
                 .build();
     }
 
-    private ProductRequestDTO mockUpdateProductRequest() {
-        return ProductRequestDTO.builder()
+    private ProductRequest mockUpdateProductRequest() {
+        return ProductRequest.builder()
                 .id(1L)
                 .name("Iron Man Cup")
                 .productTypeId(1L)
@@ -304,17 +349,22 @@ class ProductServiceImplTest {
     }
 
     private Product mockProductToUpdate() {
+        var cup = ProductType.builder()
+                .id(1L)
+                .name("Cup")
+                .build();
+
         return Product.builder()
                 .id(1L)
                 .name("Iron Man Cup")
-                .productType(new ProductType(1L, "Cup"))
+                .productType(cup)
                 .stock(100)
                 .price(BigDecimal.valueOf(50.00))
                 .build();
     }
 
-    private ProductResponseDTO mockUpdatedProductResponseDTO() {
-        return ProductResponseDTO.builder()
+    private ProductResponse mockUpdatedProductResponseDTO() {
+        return ProductResponse.builder()
                 .id(1L)
                 .name("Iron Man Cup")
                 .productType(new ProductTypeDTO(1L, "Cup"))
@@ -323,8 +373,8 @@ class ProductServiceImplTest {
                 .build();
     }
 
-    private ProductResponseDTO mockExistingProductResponseDTO() {
-        return ProductResponseDTO.builder()
+    private ProductResponse mockExistingProductResponse() {
+        return ProductResponse.builder()
                 .id(1L)
                 .name("Iron Man Cup")
                 .productType(new ProductTypeDTO(1L, "Cup"))
@@ -333,8 +383,8 @@ class ProductServiceImplTest {
                 .build();
     }
 
-    private ProductRequestDTO mockNewProductRequest() {
-        return ProductRequestDTO.builder()
+    private ProductRequest mockNewProductRequest() {
+        return ProductRequest.builder()
                 .id(1L)
                 .name("Iron Man Cup")
                 .productTypeId(1L)
@@ -344,7 +394,7 @@ class ProductServiceImplTest {
     }
 
     private List<Product> mockExistingProducts() {
-        var shirtProductType = new ProductType(1L, "Shirt");
+        var shirtProductType = ProductType.builder().id(1L).name("Shirt").build();
 
         var ironManShirt = Product.builder()
                 .id(1L)
@@ -373,10 +423,10 @@ class ProductServiceImplTest {
         return asList(ironManShirt, spiderManShirt, batmanShirt);
     }
 
-    private List<ProductResponseDTO> mockExistingProductsResponseDTO() {
+    private List<ProductResponse> mockExistingProductsResponse() {
         var shirtProductType = new ProductTypeDTO(1L, "Shirt");
 
-        var ironManShirt = ProductResponseDTO.builder()
+        var ironManShirt = ProductResponse.builder()
                 .id(1L)
                 .name("Iron Man Shirt")
                 .productType(shirtProductType)
@@ -384,7 +434,7 @@ class ProductServiceImplTest {
                 .price(BigDecimal.valueOf(60.00))
                 .build();
 
-        var spiderManShirt = ProductResponseDTO.builder()
+        var spiderManShirt = ProductResponse.builder()
                 .id(2L)
                 .name("Spider Man Shirt")
                 .productType(shirtProductType)
@@ -392,7 +442,7 @@ class ProductServiceImplTest {
                 .price(BigDecimal.valueOf(45.00))
                 .build();
 
-        var batmanShirt = ProductResponseDTO.builder()
+        var batmanShirt = ProductResponse.builder()
                 .id(3L)
                 .name("Batman Shirt")
                 .productType(shirtProductType)
@@ -401,5 +451,13 @@ class ProductServiceImplTest {
                 .build();
 
         return asList(ironManShirt, spiderManShirt, batmanShirt);
+    }
+
+    private List<Product> mockProductsInStock() {
+        return singletonList(mockExistingProducts().get(1));
+    }
+
+    private List<ProductResponse> mockProductsInStockResponse() {
+        return singletonList(mockExistingProductsResponse().get(1));
     }
 }

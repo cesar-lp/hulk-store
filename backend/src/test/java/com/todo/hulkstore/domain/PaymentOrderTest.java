@@ -1,63 +1,110 @@
 package com.todo.hulkstore.domain;
 
+import com.todo.hulkstore.domain.embedded.ProductDetail;
+import com.todo.hulkstore.exception.InvalidEntityStateException;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 
+import static com.todo.hulkstore.utils.NumberUtils.roundToTwoDecimalPlaces;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PaymentOrderTest {
 
     @Test
-    void shouldThrowExceptionWhenCreatingPaymentOrderWithInvalidProductId() {
-        var expectedError = "Product id has an invalid value.";
+    void shouldCreatePaymentOrderSuccessfully() {
+        var id = 1L;
+        var createdAt = LocalDateTime.now();
+        var productOrders = mockProductOrders();
+        var total = roundToTwoDecimalPlaces(BigDecimal.valueOf(30.50));
 
-        var ex = assertThrows(IllegalArgumentException.class,
-                () -> PaymentOrder.builder().productId(null).build());
-        assertEquals(expectedError, ex.getMessage());
+        var paymentOrder = PaymentOrder.builder()
+                .id(id)
+                .productOrders(productOrders)
+                .createdAt(createdAt)
+                .total(total)
+                .build();
 
-        ex = assertThrows(IllegalArgumentException.class, () ->
-                PaymentOrder.builder().productId(0L).build());
-        assertEquals(expectedError, ex.getMessage());
+        assertEquals(id, paymentOrder.getId());
+        assertThat(paymentOrder.getProductOrders().get(0), samePropertyValuesAs(productOrders.get(0)));
+        assertEquals(createdAt, paymentOrder.getCreatedAt());
+        assertEquals(total, paymentOrder.getTotal());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenCreatingPaymentOrderWithoutProductOrder() {
+        var expectedMessage = "Must contain at least one product order";
+
+        var ex = assertThrows(InvalidEntityStateException.class,
+                () -> PaymentOrder.builder()
+                        .productOrders(emptyList())
+                        .total(BigDecimal.ZERO)
+                        .build());
+
+        assertEquals(expectedMessage, ex.getFieldErrorMessage("productOrders"));
+
+        ex = assertThrows(InvalidEntityStateException.class,
+                () -> PaymentOrder.builder()
+                        .productOrders(null)
+                        .total(BigDecimal.ZERO)
+                        .build());
+
+        assertEquals(expectedMessage, ex.getFieldErrorMessage("productOrders"));
     }
 
     @Test
     void shouldThrowExceptionWhenCreatingPaymentOrderWithInvalidTotal() {
-        var expectedError = "Total cannot be null nor negative.";
+        var expectedMessage = "Total cannot be null";
 
-        var ex = assertThrows(IllegalArgumentException.class,
-                () -> PaymentOrder.builder().total(null).build());
-        assertEquals(expectedError, ex.getMessage());
+        List<ProductOrder> productOrders = mockProductOrders();
 
-        ex = assertThrows(IllegalArgumentException.class, () ->
-                PaymentOrder.builder().total(BigDecimal.valueOf(-25.00)).build());
-        assertEquals(expectedError, ex.getMessage());
+        var ex = assertThrows(InvalidEntityStateException.class,
+                () -> PaymentOrder.builder()
+                        .productOrders(productOrders)
+                        .total(null)
+                        .build());
+
+        assertEquals(expectedMessage, ex.getFieldErrorMessage("total"));
+
+        expectedMessage = "Total cannot be negative";
+
+        ex = assertThrows(InvalidEntityStateException.class,
+                () -> PaymentOrder.builder()
+                        .productOrders(productOrders)
+                        .total(BigDecimal.valueOf(-5))
+                        .build());
+
+        assertEquals(expectedMessage, ex.getFieldErrorMessage("total"));
+
+        expectedMessage = "Payment order total and sum of product orders' total are not equal";
+
+        ex = assertThrows(InvalidEntityStateException.class,
+                () -> PaymentOrder.builder()
+                        .productOrders(productOrders)
+                        .total(BigDecimal.valueOf(25.00))
+                        .build());
+
+        assertEquals(expectedMessage, ex.getFieldErrorMessage("total"));
     }
 
-    @Test
-    void shouldThrowExceptionWhenCreatingPaymentOrderWithInvalidQuantity() {
-        var expectedError = "Quantity cannot be null nor negative.";
+    private List<ProductOrder> mockProductOrders() {
+        var productDetails = ProductDetail.builder()
+                .id(1L)
+                .name("Iron Man Cup")
+                .price(BigDecimal.valueOf(15.25))
+                .build();
 
-        var ex = assertThrows(IllegalArgumentException.class,
-                () -> PaymentOrder.builder().quantity(null).build());
-        assertEquals(expectedError, ex.getMessage());
-
-        ex = assertThrows(IllegalArgumentException.class,
-                () -> PaymentOrder.builder().quantity(-25).build());
-        assertEquals(expectedError, ex.getMessage());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenCreatingPaymentOrderWithInvalidUnitPrice() {
-        var expectedError = "Unit price cannot be null nor negative.";
-
-        var ex = assertThrows(IllegalArgumentException.class,
-                () -> PaymentOrder.builder().unitPrice(null).build());
-        assertEquals(expectedError, ex.getMessage());
-
-        ex = assertThrows(IllegalArgumentException.class,
-                () -> PaymentOrder.builder().unitPrice(BigDecimal.valueOf(-25.50)).build());
-        assertEquals(expectedError, ex.getMessage());
+        return singletonList(ProductOrder.builder()
+                .productDetail(productDetails)
+                .quantity(2)
+                .total(BigDecimal.valueOf(30.50))
+                .build());
     }
 }

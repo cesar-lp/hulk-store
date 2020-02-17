@@ -3,15 +3,15 @@ package com.todo.hulkstore.dto;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 
-@Data
-@AllArgsConstructor
+@Getter
 @Builder
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductTypeDTO implements Serializable {
 
@@ -22,3 +22,4 @@ public class ProductTypeDTO implements Serializable {
     @NotBlank(message = "Name is required.")
     String name;
 }
+

@@ -9,10 +9,10 @@ import lombok.experimental.FieldDefaults;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-@Builder
 @Data
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProductResponseDTO implements Serializable {
+public class ProductResponse implements Serializable {
 
     static final long serialVersionUID = 3166209577379820719L;
 

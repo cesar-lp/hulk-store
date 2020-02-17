@@ -18,8 +18,8 @@ public class InvalidProductOrderError implements Serializable {
     private static final long serialVersionUID = -5215419118823855534L;
 
     public InvalidProductOrderError(ProductOrder productOrder, Integer availableStock) {
-        this.id = productOrder.getProductId();
-        this.name = productOrder.getProductName();
+        this.id = productOrder.getProductDetail().getId();
+        this.name = productOrder.getProductDetail().getName();
         this.requestedQuantity = productOrder.getQuantity();
         this.stock = availableStock;
     }

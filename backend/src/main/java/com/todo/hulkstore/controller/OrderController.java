@@ -1,7 +1,7 @@
 package com.todo.hulkstore.controller;
 
-import com.todo.hulkstore.dto.request.PaymentOrderRequestDTO;
-import com.todo.hulkstore.dto.response.PaymentOrderResponseDTO;
+import com.todo.hulkstore.dto.request.PaymentOrderRequest;
+import com.todo.hulkstore.dto.response.PaymentOrderResponse;
 import com.todo.hulkstore.service.PaymentOrderService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -31,13 +31,13 @@ public class OrderController {
 
     @GetMapping("")
     @ResponseStatus(HttpStatus.OK)
-    public List<PaymentOrderResponseDTO> getAllOrders() {
+    public List<PaymentOrderResponse> getAllOrders() {
         return paymentOrderService.getAllPaymentOrders();
     }
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public PaymentOrderResponseDTO registerPaymentOrder(@RequestBody PaymentOrderRequestDTO paymentOrderRequestDTO) {
-        return paymentOrderService.registerPaymentOrder(paymentOrderRequestDTO);
+    public PaymentOrderResponse registerPaymentOrder(@RequestBody PaymentOrderRequest paymentOrderRequest) {
+        return paymentOrderService.registerPaymentOrder(paymentOrderRequest);
     }
 }

@@ -1,17 +1,12 @@
 package com.todo.hulkstore.exception.error;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.springframework.validation.FieldError;
 
+import javax.validation.ConstraintViolation;
 import java.io.Serializable;
 
-@Getter
-@Setter
-@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FieldValidationError implements Serializable {
 
@@ -21,6 +16,12 @@ public class FieldValidationError implements Serializable {
         this.fieldName = err.getField();
         this.error = err.getDefaultMessage();
         this.invalidValue = err.getRejectedValue();
+    }
+
+    public FieldValidationError(ConstraintViolation violation) {
+        this.fieldName = violation.getPropertyPath().toString();
+        this.error = violation.getMessage();
+        this.invalidValue = violation.getInvalidValue();
     }
 
     String fieldName;

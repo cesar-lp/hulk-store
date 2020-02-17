@@ -14,12 +14,12 @@ import java.util.List;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PaymentOrderResponseDTO implements Serializable {
+public class PaymentOrderResponse implements Serializable {
 
     static final long serialVersionUID = 2722848793699982149L;
 
     Long id;
-    LocalDateTime dateTime;
     List<ProductOrderDTO> productOrders;
+    LocalDateTime createdAt;
     BigDecimal total;
 }

@@ -1,16 +1,17 @@
 package com.todo.hulkstore.service.impl;
 
-import com.todo.hulkstore.converter.PaymentOrderConverter;
 import com.todo.hulkstore.domain.PaymentOrder;
 import com.todo.hulkstore.domain.Product;
 import com.todo.hulkstore.domain.ProductOrder;
-import com.todo.hulkstore.dto.request.PaymentOrderRequestDTO;
-import com.todo.hulkstore.dto.request.ProductOrderRequestDTO;
-import com.todo.hulkstore.dto.response.PaymentOrderResponseDTO;
+import com.todo.hulkstore.domain.embedded.ProductDetail;
+import com.todo.hulkstore.dto.request.PaymentOrderRequest;
+import com.todo.hulkstore.dto.request.OrderLineRequest;
+import com.todo.hulkstore.dto.response.PaymentOrderResponse;
 import com.todo.hulkstore.exception.InvalidProductOrderException;
 import com.todo.hulkstore.exception.ResourceNotFoundException;
 import com.todo.hulkstore.exception.ServiceException;
 import com.todo.hulkstore.exception.error.InvalidProductOrderError;
+import com.todo.hulkstore.mapper.PaymentOrderMapper;
 import com.todo.hulkstore.repository.PaymentOrderRepository;
 import com.todo.hulkstore.repository.ProductRepository;
 import com.todo.hulkstore.service.PaymentOrderService;
@@ -35,7 +36,7 @@ public class PaymentOrderServiceImpl implements PaymentOrderService {
     Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
     PaymentOrderRepository paymentOrderRepository;
-    PaymentOrderConverter converter;
+    PaymentOrderMapper paymentOrderMapper;
     ProductRepository productRepository;
 
     /**
@@ -44,11 +45,8 @@ public class PaymentOrderServiceImpl implements PaymentOrderService {
      * @return existing payment orders.
      */
     @Override
-    public List<PaymentOrderResponseDTO> getAllPaymentOrders() {
-        return paymentOrderRepository.findAll()
-                .stream()
-                .map(converter::toPaymentOrderResponseDTO)
-                .collect(toList());
+    public List<PaymentOrderResponse> getAllPaymentOrders() {
+        return paymentOrderMapper.toPaymentOrderResponseList(paymentOrderRepository.findAll());
     }
 
     /**
@@ -58,16 +56,16 @@ public class PaymentOrderServiceImpl implements PaymentOrderService {
      * @return the created payment order.
      */
     @Override
-    public PaymentOrderResponseDTO registerPaymentOrder(PaymentOrderRequestDTO paymentOrderRequest) {
+    public PaymentOrderResponse registerPaymentOrder(PaymentOrderRequest paymentOrderRequest) {
         try {
-            var productIds = paymentOrderRequest.getProductOrders()
+            var productIds = paymentOrderRequest.getOrderLines()
                     .stream()
-                    .mapToLong(ProductOrderRequestDTO::getProductId)
+                    .mapToLong(OrderLineRequest::getProductId)
                     .boxed()
                     .collect(toList());
 
             var products = productRepository.findByIdIn(productIds);
-            var productOrders = zipToProductOrder(paymentOrderRequest.getProductOrders(), products);
+            var productOrders = zipToProductOrders(paymentOrderRequest.getOrderLines(), products);
 
             handleProductOrders(productOrders, products);
 
@@ -81,9 +79,10 @@ public class PaymentOrderServiceImpl implements PaymentOrderService {
                     .build();
 
             productRepository.saveAll(products);
-            paymentOrderRepository.save(paymentOrder);
 
-            return converter.toPaymentOrderResponseDTO(paymentOrder);
+            var createdPaymentOrder = paymentOrderRepository.save(paymentOrder);
+
+            return paymentOrderMapper.toPaymentOrderResponse(createdPaymentOrder);
         } catch (ResourceNotFoundException rnfExc) {
             logger.error(rnfExc.getMessage());
             throw rnfExc;
@@ -96,13 +95,13 @@ public class PaymentOrderServiceImpl implements PaymentOrderService {
         }
     }
 
-    private List<ProductOrder> zipToProductOrder(
-            List<ProductOrderRequestDTO> productOrderReq, List<Product> products) {
+    private List<ProductOrder> zipToProductOrders(
+            List<OrderLineRequest> orderLines, List<Product> products) {
         var productOrders = new ArrayList<ProductOrder>();
 
-        for (var poReq : productOrderReq) {
-            var orderProductId = poReq.getProductId();
-            var orderQuantity = poReq.getQuantity();
+        for (var order : orderLines) {
+            var orderProductId = order.getProductId();
+            var orderQuantity = order.getQuantity();
 
             products.stream()
                     .filter(p -> p.getId().equals(orderProductId))
@@ -116,10 +115,14 @@ public class PaymentOrderServiceImpl implements PaymentOrderService {
     }
 
     private ProductOrder buildProductOrder(Product p, Integer quantity) {
+        var productDetail = ProductDetail.builder()
+                .id(p.getId())
+                .name(p.getName())
+                .price(p.getPrice())
+                .build();
+
         return ProductOrder.builder()
-                .productId(p.getId())
-                .productName(p.getName())
-                .productPrice(p.getPrice())
+                .productDetail(productDetail)
                 .quantity(quantity)
                 .total(p.getPrice().multiply(BigDecimal.valueOf(quantity)))
                 .build();
@@ -134,11 +137,11 @@ public class PaymentOrderServiceImpl implements PaymentOrderService {
 
         for (var order : productOrders) {
             products.stream()
-                    .filter(p -> p.getId().equals(order.getProductId()))
+                    .filter(p -> p.getId().equals(order.getProductDetail().getId()))
                     .findFirst()
                     .ifPresentOrElse(
                             p -> handleProductInventory(p, order, invalidProductOrders),
-                            () -> handleProductInventoryNotFound(order.getProductId())
+                            () -> handleProductInventoryNotFound(order.getProductDetail().getId())
                     );
         }
 

@@ -1,15 +1,18 @@
 package com.todo.hulkstore.service.impl;
 
-import com.todo.hulkstore.converter.PaymentOrderConverter;
 import com.todo.hulkstore.domain.PaymentOrder;
 import com.todo.hulkstore.domain.Product;
+import com.todo.hulkstore.domain.ProductOrder;
 import com.todo.hulkstore.domain.ProductType;
-import com.todo.hulkstore.dto.PaymentOrderDTO;
-import com.todo.hulkstore.dto.request.PaymentOrderRequestDTO;
-import com.todo.hulkstore.dto.request.ProductOrderRequestDTO;
+import com.todo.hulkstore.domain.embedded.ProductDetail;
+import com.todo.hulkstore.dto.ProductOrderDTO;
+import com.todo.hulkstore.dto.request.OrderLineRequest;
+import com.todo.hulkstore.dto.request.PaymentOrderRequest;
+import com.todo.hulkstore.dto.response.PaymentOrderResponse;
 import com.todo.hulkstore.exception.InvalidProductOrderException;
 import com.todo.hulkstore.exception.ResourceNotFoundException;
 import com.todo.hulkstore.exception.error.InvalidProductOrderError;
+import com.todo.hulkstore.mapper.PaymentOrderMapper;
 import com.todo.hulkstore.repository.PaymentOrderRepository;
 import com.todo.hulkstore.repository.ProductRepository;
 import lombok.AccessLevel;
@@ -23,17 +26,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.beans.SamePropertyValuesAs.samePropertyValuesAs;
+import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -50,112 +55,169 @@ public class PaymentOrderServiceImplTest {
     ProductRepository productRepository;
 
     @Mock
-    PaymentOrderConverter converter;
+    PaymentOrderMapper paymentOrderMapper;
 
     @InjectMocks
     PaymentOrderServiceImpl paymentOrderService;
 
     @AfterEach
     void afterEach() {
-        verifyNoMoreInteractions(paymentOrderRepository, productRepository);
+        verifyNoMoreInteractions(paymentOrderRepository, productRepository, paymentOrderMapper);
     }
 
-    // TODO: improve
+    @Test
+    void shouldGetAllPaymentOrdersSuccessfully() {
+        var existingPaymentOrders = mockExistingPaymentOrders();
+        var expectedPaymentOrders = mockExistingPaymentOrdersResponse(existingPaymentOrders);
+
+        when(paymentOrderRepository.findAll())
+                .thenReturn(existingPaymentOrders);
+
+        when(paymentOrderMapper.toPaymentOrderResponseList(existingPaymentOrders))
+                .thenReturn(expectedPaymentOrders);
+
+        var actualPaymentOrders = paymentOrderService.getAllPaymentOrders();
+
+        assertThat(actualPaymentOrders, samePropertyValuesAs(expectedPaymentOrders));
+
+        verify(paymentOrderRepository, times(1)).findAll();
+        verify(paymentOrderMapper, times(1)).toPaymentOrderResponseList(existingPaymentOrders);
+    }
+
+    @Test
+    void shouldGetEmptyListWhenRetrievingNonExistingPaymentOrders() {
+        List<PaymentOrder> existingPaymentOrderDetails = emptyList();
+        List<PaymentOrderResponse> expectedPaymentOrders = emptyList();
+
+        when(paymentOrderRepository.findAll())
+                .thenReturn(existingPaymentOrderDetails);
+
+        when(paymentOrderMapper.toPaymentOrderResponseList(existingPaymentOrderDetails))
+                .thenReturn(expectedPaymentOrders);
+
+        var actualPaymentOrders = paymentOrderService.getAllPaymentOrders();
+
+        assertTrue(actualPaymentOrders.isEmpty());
+
+        verify(paymentOrderRepository, times(1)).findAll();
+        verify(paymentOrderMapper, times(1)).toPaymentOrderResponseList(existingPaymentOrderDetails);
+    }
+
     @Test
     void shouldCreatePaymentOrderSuccessfully() {
-        var paymentOrderRequest = mockNewPaymentOrderRequestDTO();
+        var orderLinesRequests = new ArrayList<>(asList(
+                OrderLineRequest.builder().productId(1L).quantity(5).build(),
+                OrderLineRequest.builder().productId(2L).quantity(10).build(),
+                OrderLineRequest.builder().productId(3L).quantity(5).build()
+        ));
+
+        var paymentOrderRequest = PaymentOrderRequest.builder()
+                .orderLines(orderLinesRequests)
+                .build();
+
         var orderProductIds = asList(1L, 2L, 3L);
         var existingProducts = mockExistingProducts();
-        var createdPaymentOrders = mockCreatedPaymentOrders(existingProducts);
-        var expectedPaymentOrdersCreated = mockPaymentOrdersDTOList();
+
+        var createdAt = LocalDateTime.now();
+        var createdProductOrders = mockCreatedOrderLines(existingProducts, orderLinesRequests);
+        var createdPaymentOrder = mockCreatedPaymentOrder(createdProductOrders, createdAt);
+
+        var expectedPaymentOrderResponse = mockPaymentOrderResponse(createdPaymentOrder);
 
         when(productRepository.findByIdIn(orderProductIds))
                 .thenReturn(existingProducts);
 
-        when(productRepository.saveAll(any()))
-                .thenReturn(existingProducts);
+        when(paymentOrderRepository.save(any(PaymentOrder.class)))
+                .thenReturn(createdPaymentOrder);
 
-        when(paymentOrderRepository.saveAll(any()))
-                .thenReturn(createdPaymentOrders);
+        when(paymentOrderMapper.toPaymentOrderResponse(createdPaymentOrder))
+                .thenReturn(expectedPaymentOrderResponse);
 
-        when(converter.toPaymentOrderDTOList(any(), any()))
-                .thenReturn(expectedPaymentOrdersCreated);
+        var actualPaymentOrderResponse = paymentOrderService.registerPaymentOrder(paymentOrderRequest);
 
-        var actualPaymentOrdersCreated = paymentOrderService.registerOrder(paymentOrderRequest);
-
-        assertThat(expectedPaymentOrdersCreated, samePropertyValuesAs(actualPaymentOrdersCreated));
+        assertThat(actualPaymentOrderResponse, samePropertyValuesAs(expectedPaymentOrderResponse));
 
         verify(productRepository, times(1)).findByIdIn(orderProductIds);
         verify(productRepository, times(1)).saveAll(existingProducts);
-        verify(paymentOrderRepository, times(1)).saveAll(any());
+        verify(paymentOrderRepository, times(1)).save(any(PaymentOrder.class));
+        verify(paymentOrderMapper, times(1)).toPaymentOrderResponse(createdPaymentOrder);
     }
 
     @Test
     void shouldThrowExceptionWhenCreatingPaymentOrderForNonExistingProduct() {
-        var paymentOrderRequest = new PaymentOrderRequestDTO(
-                singletonList(new ProductOrderRequestDTO(5L, 10)));
+        var paymentOrderRequest = PaymentOrderRequest.builder()
+                .orderLines(singletonList(OrderLineRequest.builder().productId(5L).build()))
+                .build();
+
         var orderProductIds = singletonList(5L);
         var expectedError = "Couldn't register payment order: product not found for id 5";
 
-        when(productRepository.findByIdIn(orderProductIds)).thenReturn(mockExistingProducts());
+        when(productRepository.findByIdIn(orderProductIds))
+                .thenReturn(emptyList());
 
         var exc = assertThrows(ResourceNotFoundException.class,
-                () -> paymentOrderService.registerOrder(paymentOrderRequest));
+                () -> paymentOrderService.registerPaymentOrder(paymentOrderRequest));
 
         assertEquals(expectedError, exc.getMessage());
         verify(productRepository, times(1)).findByIdIn(orderProductIds);
     }
 
     @Test
-    void shouldThrowExceptionWhenCreatingPaymentOrderForInvalidQuantities() {
-        var orderProductIds = asList(1L, 2L, 3L);
+    void shouldThrowExceptionWhenCreatingPaymentOrderWithInvalidQuantities() {
+        var orderLineRequests = singletonList(
+                OrderLineRequest.builder()
+                        .productId(5L)
+                        .quantity(5)
+                        .build());
+
+        var paymentOrderRequest = PaymentOrderRequest.builder()
+                .orderLines(orderLineRequests)
+                .build();
+
+        var orderProductIds = singletonList(5L);
+
+        var cupsProductType = ProductType.builder()
+                .id(1L)
+                .name("Cups")
+                .build();
+
+        var existingProducts = singletonList(
+                Product.builder()
+                        .id(5L)
+                        .name("Iron Man Cup")
+                        .productType(cupsProductType)
+                        .price(BigDecimal.valueOf(7.50))
+                        .stock(2)
+                        .build()
+        );
 
         when(productRepository.findByIdIn(orderProductIds))
-                .thenReturn(mockExistingProductsWitLowStock());
+                .thenReturn(existingProducts);
 
         var exc = assertThrows(InvalidProductOrderException.class,
-                () -> paymentOrderService.registerOrder(mockNewPaymentOrderRequestDTO()));
+                () -> paymentOrderService.registerPaymentOrder(paymentOrderRequest));
 
-        var expectedErrors = mockInvalidProductOrderErrors();
+        var expectedError = InvalidProductOrderError.builder()
+                .id(5L)
+                .name("Iron Man Cup")
+                .requestedQuantity(5)
+                .stock(2)
+                .build();
 
-        assertThat(expectedErrors.get(0), samePropertyValuesAs(exc.getInvalidProductOrderErrors().get(0)));
-        assertThat(expectedErrors.get(1), samePropertyValuesAs(exc.getInvalidProductOrderErrors().get(1)));
+        assertThat(expectedError, samePropertyValuesAs(exc.getInvalidProductOrderErrors().get(0)));
         verify(productRepository, times(1)).findByIdIn(orderProductIds);
     }
 
-    private List<InvalidProductOrderError> mockInvalidProductOrderErrors() {
-        var invalidOrder1 = InvalidProductOrderError.builder()
-                .id(1L)
-                .name("Iron Man Cup")
-                .requestedQuantity(10)
-                .stock(5)
-                .build();
-
-        var invalidOrder2 = InvalidProductOrderError.builder()
-                .id(3L)
-                .name("Hulk Cup")
-                .requestedQuantity(10)
-                .stock(5)
-                .build();
-
-        return asList(invalidOrder1, invalidOrder2);
-    }
-
-    private PaymentOrderRequestDTO mockNewPaymentOrderRequestDTO() {
-        var order1 = new ProductOrderRequestDTO(1L, 10);
-        var order2 = new ProductOrderRequestDTO(2L, 10);
-        var order3 = new ProductOrderRequestDTO(3L, 10);
-
-        return new PaymentOrderRequestDTO(asList(order1, order2, order3));
-    }
-
     private List<Product> mockExistingProducts() {
-        var type = new ProductType(1L, "Cups");
+        var cups = ProductType.builder()
+                .id(1L)
+                .name("Cups")
+                .build();
 
         var p1 = Product.builder()
                 .id(1L)
                 .name("Iron Man Cup")
-                .productType(type)
+                .productType(cups)
                 .stock(20)
                 .price(BigDecimal.valueOf(30.00))
                 .build();
@@ -163,7 +225,7 @@ public class PaymentOrderServiceImplTest {
         var p2 = Product.builder()
                 .id(2L)
                 .name("Batman Cup")
-                .productType(type)
+                .productType(cups)
                 .stock(20)
                 .price(BigDecimal.valueOf(27.00))
                 .build();
@@ -171,7 +233,7 @@ public class PaymentOrderServiceImplTest {
         var p3 = Product.builder()
                 .id(3L)
                 .name("Hulk Cup")
-                .productType(type)
+                .productType(cups)
                 .stock(20)
                 .price(BigDecimal.valueOf(25.00))
                 .build();
@@ -179,77 +241,115 @@ public class PaymentOrderServiceImplTest {
         return asList(p1, p2, p3);
     }
 
-    private List<Product> mockExistingProductsWitLowStock() {
-        var type = new ProductType(1L, "Cups");
-
-        var p1 = Product.builder()
-                .id(1L)
-                .name("Iron Man Cup")
-                .productType(type)
-                .stock(5)
-                .price(BigDecimal.valueOf(30.00))
+    private ProductOrder mockCreatedProductOrder(Product product, Integer quantity) {
+        var productDetail = ProductDetail.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .price(product.getPrice())
                 .build();
 
-        var p2 = Product.builder()
-                .id(2L)
-                .name("Batman Cup")
-                .productType(type)
-                .stock(15)
-                .price(BigDecimal.valueOf(27.00))
+        return ProductOrder.builder()
+                .id(product.getId())
+                .productDetail(productDetail)
+                .quantity(quantity)
+                .total(BigDecimal.valueOf(quantity).multiply(product.getPrice()))
                 .build();
-
-        var p3 = Product.builder()
-                .id(3L)
-                .name("Hulk Cup")
-                .productType(type)
-                .stock(5)
-                .price(BigDecimal.valueOf(25.00))
-                .build();
-
-        return asList(p1, p2, p3);
     }
 
-    private List<PaymentOrder> mockCreatedPaymentOrders(List<Product> products) {
-        var createdAt = LocalDateTime.now();
-        return products.stream()
-                .map(p -> toCreatedPaymentOrder(p, createdAt))
-                .collect(toList());
+    private List<ProductOrder> mockCreatedOrderLines(
+            List<Product> existingProducts, List<OrderLineRequest> orderLineRequests) {
+        var createdProductOrders = new ArrayList<ProductOrder>();
+
+        for (var i = 0; i < existingProducts.size(); i++) {
+            var product = existingProducts.get(i);
+            var quantity = orderLineRequests.get(i).getQuantity();
+            createdProductOrders.add(mockCreatedProductOrder(product, quantity));
+        }
+
+        return createdProductOrders;
     }
 
-    private List<PaymentOrderDTO> mockPaymentOrdersDTOList() {
-        var ironManCup = PaymentOrderDTO.builder()
-                .id(1L)
-                .productName("Iron Man Cup")
-                .productStockLeft(10)
-                .total(BigDecimal.valueOf(300.00))
-                .build();
-
-        var batmanCup = PaymentOrderDTO.builder()
-                .id(2L)
-                .productName("Batman Cup")
-                .productStockLeft(10)
-                .total(BigDecimal.valueOf(270.00))
-                .build();
-
-        var hulkCup = PaymentOrderDTO.builder()
-                .id(3L)
-                .productName("Hulk Cup")
-                .productStockLeft(10)
-                .total(BigDecimal.valueOf(250.00))
-                .build();
-
-        return asList(ironManCup, batmanCup, hulkCup);
-    }
-
-    private PaymentOrder toCreatedPaymentOrder(Product p, LocalDateTime time) {
-        var total = BigDecimal.valueOf(10).multiply(p.getPrice());
+    private PaymentOrder mockCreatedPaymentOrder(List<ProductOrder> productOrders, LocalDateTime createdAt) {
         return PaymentOrder.builder()
-                .id(p.getId())
-                .productId(p.getId())
-                .unitPrice(p.getPrice())
-                .quantity(10)
-                .total(total)
-                .date(time)
+                .id(1L)
+                .productOrders(productOrders)
+                .createdAt(createdAt)
+                .total(BigDecimal.valueOf(545.00))
                 .build();
+    }
+
+    private List<PaymentOrder> mockExistingPaymentOrders() {
+        var ironManCup = ProductDetail.builder()
+                .id(1L)
+                .name("Iron Man Cup")
+                .price(BigDecimal.valueOf(50))
+                .build();
+
+        var ironManCupOrderLine = ProductOrder.builder()
+                .id(1L)
+                .productDetail(ironManCup)
+                .quantity(10)
+                .total(BigDecimal.valueOf(500))
+                .build();
+
+        var firstPaymentOrder = PaymentOrder.builder()
+                .id(1L)
+                .productOrders(singletonList(ironManCupOrderLine))
+                .total(BigDecimal.valueOf(500))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        var batmanCup = ProductDetail.builder()
+                .id(2L)
+                .name("Batman Cup")
+                .price(BigDecimal.valueOf(125))
+                .build();
+
+        var batmanCupOrderLine = ProductOrder.builder()
+                .id(2L)
+                .productDetail(batmanCup)
+                .quantity(2)
+                .total(BigDecimal.valueOf(250))
+                .build();
+
+        var secondPaymentOrder = PaymentOrder.builder()
+                .id(2L)
+                .productOrders(singletonList(batmanCupOrderLine))
+                .total(BigDecimal.valueOf(250))
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        return asList(firstPaymentOrder, secondPaymentOrder);
+    }
+
+    private PaymentOrderResponse mockPaymentOrderResponse(PaymentOrder paymentOrder) {
+        var orderLineDetails = paymentOrder
+                .getProductOrders()
+                .stream()
+                .map(this::mockOrderLineDTO)
+                .collect(toList());
+
+        return PaymentOrderResponse.builder()
+                .id(paymentOrder.getId())
+                .productOrders(orderLineDetails)
+                .createdAt(paymentOrder.getCreatedAt())
+                .total(paymentOrder.getTotal())
+                .build();
+    }
+
+    private ProductOrderDTO mockOrderLineDTO(ProductOrder productOrder) {
+        return ProductOrderDTO.builder()
+                .id(productOrder.getId())
+                .productName(productOrder.getProductDetail().getName())
+                .productPrice(productOrder.getProductDetail().getPrice())
+                .quantity(productOrder.getQuantity())
+                .total(productOrder.getTotal())
+                .build();
+    }
+
+    private List<PaymentOrderResponse> mockExistingPaymentOrdersResponse(List<PaymentOrder> paymentOrderDetails) {
+        return paymentOrderDetails.stream()
+                .map(this::mockPaymentOrderResponse)
+                .collect(toList());
     }
 }
