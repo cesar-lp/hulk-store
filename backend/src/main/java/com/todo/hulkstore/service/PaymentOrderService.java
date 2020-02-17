@@ -1,14 +1,13 @@
 package com.todo.hulkstore.service;
 
-import com.todo.hulkstore.dto.ProductOrderDTO;
-import com.todo.hulkstore.dto.request.PaymentOrderRequestDTO;
-import com.todo.hulkstore.dto.response.PaymentOrderResponseDTO;
+import com.todo.hulkstore.dto.request.PaymentOrderRequest;
+import com.todo.hulkstore.dto.response.PaymentOrderResponse;
 
 import java.util.List;
 
 public interface PaymentOrderService {
 
-    List<PaymentOrderResponseDTO> getAllPaymentOrders();
+    List<PaymentOrderResponse> getAllPaymentOrders();
 
-    PaymentOrderResponseDTO registerPaymentOrder(PaymentOrderRequestDTO paymentOrderRequestDTO);
+    PaymentOrderResponse registerPaymentOrder(PaymentOrderRequest paymentOrderRequest);
 }

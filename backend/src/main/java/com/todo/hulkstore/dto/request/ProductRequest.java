@@ -13,26 +13,25 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Data
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class ProductRequestDTO implements Serializable {
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class ProductRequest implements Serializable {
 
     static final long serialVersionUID = -5624378278309074803L;
 
     Long id;
 
-    @NotBlank(message = "Name is required.")
+    @NotBlank(message = "Name is required")
     String name;
 
-    @NotNull(message = "Product type id is required.")
-    @Min(value = 1, message = "Product type id must be greater than 0.")
+    @NotNull(message = "Product type id is required")
     Long productTypeId;
 
-    @NotNull(message = "Stock is required.")
-    @Min(value = 0, message = "Stock cannot be negative.")
+    @NotNull(message = "Stock is required")
+    @Min(value = 0, message = "Stock cannot be negative")
     Integer stock;
 
-    @NotNull(message = "Price is required.")
-    @DecimalMin(value = "0.0", message = "Price cannot be negative.")
+    @NotNull(message = "Price is required")
+    @DecimalMin(value = "0.0", message = "Price cannot be negative")
     BigDecimal price;
 }

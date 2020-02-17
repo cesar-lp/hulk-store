@@ -1,7 +1,7 @@
 package com.todo.hulkstore.controller;
 
-import com.todo.hulkstore.dto.request.PaymentOrderRequestDTO;
-import com.todo.hulkstore.dto.response.PaymentOrderResponseDTO;
+import com.todo.hulkstore.dto.request.PaymentOrderRequest;
+import com.todo.hulkstore.dto.response.PaymentOrderResponse;
 import com.todo.hulkstore.service.PaymentOrderService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @AllArgsConstructor
@@ -25,19 +26,19 @@ import java.util.List;
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
 )
-public class OrderController {
+public class PaymentOrderController {
 
     PaymentOrderService paymentOrderService;
 
     @GetMapping("")
     @ResponseStatus(HttpStatus.OK)
-    public List<PaymentOrderResponseDTO> getAllOrders() {
+    public List<PaymentOrderResponse> getAllOrders() {
         return paymentOrderService.getAllPaymentOrders();
     }
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public PaymentOrderResponseDTO registerPaymentOrder(@RequestBody PaymentOrderRequestDTO paymentOrderRequestDTO) {
-        return paymentOrderService.registerPaymentOrder(paymentOrderRequestDTO);
+    public PaymentOrderResponse registerPaymentOrder(@RequestBody @Valid PaymentOrderRequest paymentOrderRequest) {
+        return paymentOrderService.registerPaymentOrder(paymentOrderRequest);
     }
 }

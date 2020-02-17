@@ -1,9 +1,9 @@
 package com.todo.hulkstore.service.impl;
 
-import com.todo.hulkstore.converter.ProductConverter;
 import com.todo.hulkstore.domain.ProductType;
 import com.todo.hulkstore.dto.ProductTypeDTO;
 import com.todo.hulkstore.exception.ResourceNotFoundException;
+import com.todo.hulkstore.mapper.ProductTypeMapper;
 import com.todo.hulkstore.repository.ProductTypeRepository;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -16,7 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -33,30 +33,30 @@ public class ProductTypeServiceImplTest {
     ProductTypeRepository productTypeRepository;
 
     @Mock
-    ProductConverter productConverter;
+    ProductTypeMapper productTypeMapper;
 
     @InjectMocks
     ProductTypeServiceImpl productTypeService;
 
     @AfterEach
     void runAfterEach() {
-        verifyNoMoreInteractions(productConverter, productTypeRepository);
+        verifyNoMoreInteractions(productTypeMapper, productTypeRepository);
     }
 
     @Test
     void shouldGetAllProductTypesSuccessfully() {
-        var existingProductTypeList = asList(
-                new ProductType(1L, "Cup"),
-                new ProductType(2L, "Shirt"));
+        var shirtProductType = ProductType.builder()
+                .id(1L)
+                .name("Shirt")
+                .build();
 
-        var expectedProductTypesRetrieved = asList(
-                new ProductTypeDTO(1L, "Cup"),
-                new ProductTypeDTO(2L, "Shirt"));
+        var existingProductTypes = singletonList(shirtProductType);
+        var expectedProductTypesRetrieved = singletonList(new ProductTypeDTO(2L, "Shirt"));
 
         when(productTypeRepository.findAll())
-                .thenReturn(existingProductTypeList);
+                .thenReturn(existingProductTypes);
 
-        when(productConverter.toProductTypeDTOList(existingProductTypeList))
+        when(productTypeMapper.toProductTypeDTOList(existingProductTypes))
                 .thenReturn(expectedProductTypesRetrieved);
 
         var actualProductTypesRetrieved = productTypeService.getAllProductTypes();
@@ -64,19 +64,24 @@ public class ProductTypeServiceImplTest {
         assertThat(actualProductTypesRetrieved, samePropertyValuesAs(expectedProductTypesRetrieved));
 
         verify(productTypeRepository, times(1)).findAll();
-        verify(productConverter, times(1)).toProductTypeDTOList(existingProductTypeList);
+        verify(productTypeMapper, times(1)).toProductTypeDTOList(existingProductTypes);
     }
 
     @Test
     void shouldGetProductTypeByIdSuccessfully() {
         var id = 1L;
-        var existingProductType = new ProductType(id, "Cup");
+
+        var existingProductType = ProductType.builder()
+                .id(id)
+                .name("Cup")
+                .build();
+
         var expectedProductTypeRetrieved = new ProductTypeDTO(id, "Cup");
 
         when(productTypeRepository.findById(id))
                 .thenReturn(Optional.of(existingProductType));
 
-        when(productConverter.toProductTypeDTO(existingProductType))
+        when(productTypeMapper.toProductTypeDTO(existingProductType))
                 .thenReturn(expectedProductTypeRetrieved);
 
         var actualProductTypeRetrieved = productTypeService.getProductTypeById(id);
@@ -84,7 +89,7 @@ public class ProductTypeServiceImplTest {
         assertThat(actualProductTypeRetrieved, samePropertyValuesAs(expectedProductTypeRetrieved));
 
         verify(productTypeRepository, times(1)).findById(id);
-        verify(productConverter, times(1)).toProductTypeDTO(existingProductType);
+        verify(productTypeMapper, times(1)).toProductTypeDTO(existingProductType);
     }
 
     @Test
@@ -102,37 +107,37 @@ public class ProductTypeServiceImplTest {
     @Test
     void shouldCreateProductTypeSuccessfully() {
         var productTypeToCreateDTO = ProductTypeDTO.builder().name("Cup").build();
-        var productTypeToCreate = new ProductType(null, "name");
-        var newProductType = new ProductType(1L, "Cup");
+        var productTypeToCreate = ProductType.builder().name("name").build();
+        var newProductType = ProductType.builder().id(1L).name("Cup").build();
         var expectedProductTypeCreated = new ProductTypeDTO(1L, "Cup");
 
-        when(productConverter.toProductType(productTypeToCreateDTO))
+        when(productTypeMapper.toProductType(productTypeToCreateDTO))
                 .thenReturn(productTypeToCreate);
 
         when(productTypeRepository.save(productTypeToCreate))
                 .thenReturn(newProductType);
 
-        when(productConverter.toProductTypeDTO(newProductType))
+        when(productTypeMapper.toProductTypeDTO(newProductType))
                 .thenReturn(expectedProductTypeCreated);
 
         var actualProductTypeCreated = productTypeService.createProductType(productTypeToCreateDTO);
 
         assertThat(actualProductTypeCreated, samePropertyValuesAs(expectedProductTypeCreated));
 
-        verify(productConverter, times(1)).toProductType(productTypeToCreateDTO);
+        verify(productTypeMapper, times(1)).toProductType(productTypeToCreateDTO);
         verify(productTypeRepository, times(1)).save(productTypeToCreate);
-        verify(productConverter, times(1)).toProductTypeDTO(newProductType);
+        verify(productTypeMapper, times(1)).toProductTypeDTO(newProductType);
     }
 
     @Test
     void shouldUpdateProductTypeSuccessfully() {
         var id = 1L;
         var productTypeToUpdateDTO = new ProductTypeDTO(id, "Cups");
-        var productTypeToUpdate = new ProductType(id, "Cups");
-        var existingProductType = new ProductType(id, "Cup");
+        var productTypeToUpdate = ProductType.builder().id(id).name("Cups").build();
+        var existingProductType = ProductType.builder().id(id).name("Cup").build();
         var expectedProductTypeUpdated = new ProductTypeDTO(id, "Cups");
 
-        when(productConverter.toProductType(productTypeToUpdateDTO))
+        when(productTypeMapper.toProductType(productTypeToUpdateDTO))
                 .thenReturn(productTypeToUpdate);
 
         when(productTypeRepository.findById(id))
@@ -141,26 +146,26 @@ public class ProductTypeServiceImplTest {
         when(productTypeRepository.save(existingProductType))
                 .thenReturn(existingProductType);
 
-        when(productConverter.toProductTypeDTO(existingProductType))
+        when(productTypeMapper.toProductTypeDTO(existingProductType))
                 .thenReturn(expectedProductTypeUpdated);
 
         var actualProductTypeUpdated = productTypeService.updateProductType(id, productTypeToUpdateDTO);
 
         assertThat(actualProductTypeUpdated, samePropertyValuesAs(expectedProductTypeUpdated));
 
-        verify(productConverter, times(1)).toProductType(productTypeToUpdateDTO);
+        verify(productTypeMapper, times(1)).toProductType(productTypeToUpdateDTO);
         verify(productTypeRepository, times(1)).findById(id);
         verify(productTypeRepository, times(1)).save(existingProductType);
-        verify(productConverter, times(1)).toProductTypeDTO(existingProductType);
+        verify(productTypeMapper, times(1)).toProductTypeDTO(existingProductType);
     }
 
     @Test
-    void shouldThrowExceptionWhenUpdatingNonExistingProduct() {
+    void shouldThrowExceptionWhenUpdatingNonExistingProductType() {
         var id = 99L;
         var productTypeToUpdateDTO = new ProductTypeDTO(id, "Cups");
-        var productTypeToUpdate = new ProductType(id, "Cups");
+        var productTypeToUpdate = ProductType.builder().id(id).name("Cups").build();
 
-        when(productConverter.toProductType(productTypeToUpdateDTO))
+        when(productTypeMapper.toProductType(productTypeToUpdateDTO))
                 .thenReturn(productTypeToUpdate);
 
         when(productTypeRepository.findById(id))
@@ -169,14 +174,14 @@ public class ProductTypeServiceImplTest {
         assertThrows(ResourceNotFoundException.class,
                 () -> productTypeService.updateProductType(id, productTypeToUpdateDTO));
 
-        verify(productConverter, times(1)).toProductType(productTypeToUpdateDTO);
+        verify(productTypeMapper, times(1)).toProductType(productTypeToUpdateDTO);
         verify(productTypeRepository, times(1)).findById(id);
     }
 
     @Test
     void shouldDeleteProductTypeByIdSuccessfully() {
         var id = 1L;
-        var existingProductType = new ProductType(id, "Cup");
+        var existingProductType = ProductType.builder().id(id).name("Cup").build();
 
         when(productTypeRepository.findById(id))
                 .thenReturn(Optional.of(existingProductType));

@@ -1,53 +1,45 @@
 package com.todo.hulkstore.domain;
 
+import com.todo.hulkstore.domain.common.ValidationEntity;
 import lombok.AccessLevel;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import java.util.Set;
-
-import static com.todo.hulkstore.utils.ValidationUtils.checkNotNullNorEmpty;
+import javax.validation.constraints.NotBlank;
 
 @Entity
-@Data
+@Getter
+@Builder
+@ToString
 @NoArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "product_type")
-public class ProductType {
-
-    public ProductType(Long id, String name) {
-        this.id = id;
-        setName(name);
-    }
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class ProductType extends ValidationEntity<ProductType> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Setter(value = AccessLevel.NONE)
+    @NotBlank(message = "Name cannot be empty")
     String name;
 
-    @OneToMany(
-            cascade = CascadeType.ALL,
-            mappedBy = "productType",
-            orphanRemoval = true,
-            fetch = FetchType.LAZY
-    )
-    private Set<Product> product;
-
-    public void setName(String name) {
-        checkNotNullNorEmpty(name, "Name cannot be null nor empty.");
+    private ProductType(Long id, String name) {
+        this.id = id;
         this.name = name;
+        validateEntity();
+    }
+
+    public void updateName(String name) {
+        this.name = name;
+        validateEntity();
     }
 }
 

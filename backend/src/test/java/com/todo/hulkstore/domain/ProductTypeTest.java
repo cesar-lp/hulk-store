@@ -1,5 +1,6 @@
 package com.todo.hulkstore.domain;
 
+import com.todo.hulkstore.exception.InvalidEntityStateException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -8,24 +9,48 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class ProductTypeTest {
 
     @Test
+    void shouldCreateProductTypeSuccessfully() {
+        var productType = ProductType.builder()
+                .id(1L)
+                .name("Cups")
+                .build();
+
+        assertEquals(1L, productType.getId());
+        assertEquals("Cups", productType.getName());
+    }
+
+    @Test
     void shouldThrowExceptionWhenCreatingProductTypeWithInvalidName() {
-        var expectedError = "Name cannot be null nor empty.";
-        var ex = assertThrows(IllegalArgumentException.class, () -> new ProductType(1L, null));
-        assertEquals(expectedError, ex.getMessage());
+        var expectedError = "Name cannot be empty";
 
-        ex = assertThrows(IllegalArgumentException.class, () -> new ProductType(1L, "   "));
-        assertEquals(expectedError, ex.getMessage());
+        var ex = assertThrows(InvalidEntityStateException.class,
+                () -> ProductType.builder()
+                        .id(1L)
+                        .build());
 
-        ex = assertThrows(IllegalArgumentException.class, () -> {
-            var productType = new ProductType();
-            productType.setName("   ");
-        });
-        assertEquals(expectedError, ex.getMessage());
+        assertEquals(expectedError, ex.getFieldErrorMessage("name"));
 
-        ex = assertThrows(IllegalArgumentException.class, () -> {
-            var productType = new ProductType();
-            productType.setName(null);
-        });
-        assertEquals(expectedError, ex.getMessage());
+        ex = assertThrows(InvalidEntityStateException.class,
+                () -> ProductType.builder()
+                        .id(1L)
+                        .name("   ")
+                        .build());
+
+        assertEquals(expectedError, ex.getFieldErrorMessage("name"));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUpdatingProductTypeNameToInvalidValue() {
+        var expectedError = "Name cannot be empty";
+        var productType = ProductType.builder()
+                .id(1L)
+                .name("Cups")
+                .build();
+
+        var ex = assertThrows(InvalidEntityStateException.class, () -> productType.updateName("   "));
+        assertEquals(expectedError, ex.getFieldErrorMessage("name"));
+
+        ex = assertThrows(InvalidEntityStateException.class, () -> productType.updateName(null));
+        assertEquals(expectedError, ex.getFieldErrorMessage("name"));
     }
 }

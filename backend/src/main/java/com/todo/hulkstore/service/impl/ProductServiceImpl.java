@@ -1,11 +1,13 @@
 package com.todo.hulkstore.service.impl;
 
-import com.todo.hulkstore.converter.ProductConverter;
 import com.todo.hulkstore.domain.Product;
-import com.todo.hulkstore.dto.request.ProductRequestDTO;
-import com.todo.hulkstore.dto.response.ProductResponseDTO;
+import com.todo.hulkstore.domain.ProductType;
+import com.todo.hulkstore.dto.request.ProductRequest;
+import com.todo.hulkstore.dto.response.ProductResponse;
 import com.todo.hulkstore.exception.ResourceNotFoundException;
 import com.todo.hulkstore.exception.ServiceException;
+import com.todo.hulkstore.mapper.ProductMapper;
+import com.todo.hulkstore.mapper.ProductTypeMapper;
 import com.todo.hulkstore.repository.ProductRepository;
 import com.todo.hulkstore.service.ProductService;
 import com.todo.hulkstore.service.ProductTypeService;
@@ -28,7 +30,8 @@ public class ProductServiceImpl implements ProductService {
 
     ProductRepository productRepository;
     ProductTypeService productTypeService;
-    ProductConverter converter;
+    ProductMapper productMapper;
+    ProductTypeMapper productTypeMapper;
 
     /**
      * Retrieves all existing products.
@@ -36,19 +39,14 @@ public class ProductServiceImpl implements ProductService {
      * @return all existing products.
      */
     @Override
-    public List<ProductResponseDTO> getAllProducts(Optional<Boolean> inStock) {
+    public List<ProductResponse> getAllProducts(Optional<Boolean> stockCondition) {
         try {
-            List<Product> productsFound;
-
-            if (inStock.isPresent()) {
-                productsFound = inStock.get()
-                        ? productRepository.retrieveProductsInStock()
-                        : productRepository.retrieveProductsWithoutStock();
-            } else {
-                productsFound = productRepository.findAll();
+            if (stockCondition.isEmpty()) {
+                return productMapper.toProductResponseList(productRepository.findAll());
             }
 
-            return converter.toProductResponseDTOList(productsFound);
+            return productMapper.toProductResponseList(
+                    productRepository.retrieveProductsByStockCondition(stockCondition.get()));
         } catch (Exception e) {
             logger.error("getAllProducts(): Couldn't retrieve all products.", e);
             throw new ServiceException("Couldn't retrieve all products", e);
@@ -62,7 +60,7 @@ public class ProductServiceImpl implements ProductService {
      * @return the product found.
      */
     @Override
-    public ProductResponseDTO getProductById(Long id) {
+    public ProductResponse getProductById(Long id) {
         try {
             var product = productRepository
                     .findById(id)
@@ -70,7 +68,7 @@ public class ProductServiceImpl implements ProductService {
                         throw new ResourceNotFoundException("Product not found for id " + id);
                     });
 
-            return converter.toProductResponseDTO(product);
+            return productMapper.toProductResponse(product);
         } catch (ResourceNotFoundException rnfExc) {
             logger.error(rnfExc.getMessage());
             throw rnfExc;
@@ -87,14 +85,12 @@ public class ProductServiceImpl implements ProductService {
      * @return the created product.
      */
     @Override
-    public ProductResponseDTO createProduct(ProductRequestDTO productRequest) {
+    public ProductResponse createProduct(ProductRequest productRequest) {
         try {
-            var productTypeId = productRequest.getProductTypeId();
-            var productType = converter
-                    .toProductType(productTypeService.getProductTypeById(productTypeId));
-            var newProduct = converter.toProduct(productRequest, productType);
+            var productType = getProductTypeById(productRequest.getProductTypeId());
+            var newProduct = productMapper.toProduct(productRequest, productType);
 
-            return converter.toProductResponseDTO(productRepository.save(newProduct));
+            return productMapper.toProductResponse(productRepository.save(newProduct));
         } catch (Exception e) {
             logger.error("createProduct({}): Couldn't create Product", productRequest, e);
             throw new ServiceException("Couldn't create Product", e);
@@ -109,12 +105,10 @@ public class ProductServiceImpl implements ProductService {
      * @return the updated product.
      */
     @Override
-    public ProductResponseDTO updateProduct(Long id, ProductRequestDTO updatedProductReq) {
+    public ProductResponse updateProduct(Long id, ProductRequest updatedProductReq) {
         try {
-            var productTypeId = updatedProductReq.getProductTypeId();
-            var productType = converter
-                    .toProductType(productTypeService.getProductTypeById(productTypeId));
-            var updatedProduct = converter.toProduct(updatedProductReq, productType);
+            var productType = getProductTypeById(updatedProductReq.getProductTypeId());
+            var updatedProduct = productMapper.toProduct(updatedProductReq, productType);
 
             var product = productRepository.findById(id)
                     .orElseThrow(() -> {
@@ -122,7 +116,7 @@ public class ProductServiceImpl implements ProductService {
                     });
 
             updatedProduct = updateProductDetails(product, updatedProduct);
-            return converter.toProductResponseDTO(productRepository.save(updatedProduct));
+            return productMapper.toProductResponse(productRepository.save(updatedProduct));
         } catch (ResourceNotFoundException rnfExc) {
             logger.error(rnfExc.getMessage());
             throw rnfExc;
@@ -163,5 +157,9 @@ public class ProductServiceImpl implements ProductService {
                 .price(updated.getPrice())
                 .stock(updated.getStock())
                 .build();
+    }
+
+    private ProductType getProductTypeById(Long id) {
+        return productTypeMapper.toProductType(productTypeService.getProductTypeById(id));
     }
 }

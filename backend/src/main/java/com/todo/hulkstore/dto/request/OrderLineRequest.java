@@ -1,19 +1,15 @@
 package com.todo.hulkstore.dto.request;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Builder;
+import lombok.Data;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
-public class ProductOrderRequestDTO implements Serializable {
+@Data
+@Builder
+public class OrderLineRequest implements Serializable {
 
     private static final long serialVersionUID = 1060677346666560106L;
 

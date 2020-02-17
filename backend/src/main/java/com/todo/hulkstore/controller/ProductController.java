@@ -1,7 +1,7 @@
 package com.todo.hulkstore.controller;
 
-import com.todo.hulkstore.dto.request.ProductRequestDTO;
-import com.todo.hulkstore.dto.response.ProductResponseDTO;
+import com.todo.hulkstore.dto.request.ProductRequest;
+import com.todo.hulkstore.dto.response.ProductResponse;
 import com.todo.hulkstore.service.ProductService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -37,26 +37,26 @@ public class ProductController {
 
     @GetMapping("")
     @ResponseStatus(HttpStatus.OK)
-    public List<ProductResponseDTO> getAllProducts(@RequestParam Optional<Boolean> inStock) {
+    public List<ProductResponse> getAllProducts(@RequestParam Optional<Boolean> inStock) {
         return productService.getAllProducts(inStock);
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ProductResponseDTO getProductById(@PathVariable Long id) {
+    public ProductResponse getProductById(@PathVariable Long id) {
         return productService.getProductById(id);
     }
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductResponseDTO createProduct(@Valid @RequestBody ProductRequestDTO newProduct) {
+    public ProductResponse createProduct(@Valid @RequestBody ProductRequest newProduct) {
         return productService.createProduct(newProduct);
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ProductResponseDTO updateProduct(
-            @PathVariable Long id, @Valid @RequestBody ProductRequestDTO updatedProduct) {
+    public ProductResponse updateProduct(
+            @PathVariable Long id, @Valid @RequestBody ProductRequest updatedProduct) {
         return productService.updateProduct(id, updatedProduct);
     }
 

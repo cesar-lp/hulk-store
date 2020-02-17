@@ -1,9 +1,9 @@
 package com.todo.hulkstore.service.impl;
 
-import com.todo.hulkstore.converter.ProductConverter;
 import com.todo.hulkstore.dto.ProductTypeDTO;
 import com.todo.hulkstore.exception.ResourceNotFoundException;
 import com.todo.hulkstore.exception.ServiceException;
+import com.todo.hulkstore.mapper.ProductTypeMapper;
 import com.todo.hulkstore.repository.ProductTypeRepository;
 import com.todo.hulkstore.service.ProductTypeService;
 import lombok.AccessLevel;
@@ -23,7 +23,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
     ProductTypeRepository productTypeRepository;
-    ProductConverter productConverter;
+    ProductTypeMapper productTypeMapper;
 
     /**
      * Retrieves all existing product types.
@@ -33,7 +33,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     @Override
     public List<ProductTypeDTO> getAllProductTypes() {
         try {
-            return productConverter.toProductTypeDTOList(productTypeRepository.findAll());
+            return productTypeMapper.toProductTypeDTOList(productTypeRepository.findAll());
         } catch (Exception e) {
             logger.error("getAllProductTypes()", e);
             throw new ServiceException("Couldn't retrieve all product types", e);
@@ -52,15 +52,15 @@ public class ProductTypeServiceImpl implements ProductTypeService {
             var productType = productTypeRepository
                     .findById(id)
                     .orElseThrow(() -> {
-                        throw new ResourceNotFoundException("Product type not found for id " + id);
+                        throw new ResourceNotFoundException(getProductTypeNotFoundMessage(id));
                     });
 
-            return productConverter.toProductTypeDTO(productType);
+            return productTypeMapper.toProductTypeDTO(productType);
         } catch (ResourceNotFoundException rnfExc) {
             logger.error(rnfExc.getMessage());
             throw rnfExc;
         } catch (Exception e) {
-            logger.error("getProductTypeById({}): couldn't retrieve product type", id, e);
+            logger.error("getProductTypeById({}): ", id, e);
             throw new ServiceException("Couldn't retrieve product type", e);
         }
     }
@@ -74,11 +74,11 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     @Override
     public ProductTypeDTO createProductType(ProductTypeDTO newProductType) {
         try {
-            var productType = productConverter.toProductType(newProductType);
-            return productConverter
+            var productType = productTypeMapper.toProductType(newProductType);
+            return productTypeMapper
                     .toProductTypeDTO(productTypeRepository.save(productType));
         } catch (Exception e) {
-            logger.error("createProductType({}): couldn't create product type", newProductType, e);
+            logger.error("createProductType({}): ", newProductType, e);
             throw new ServiceException("Couldn't create product type", e);
         }
     }
@@ -93,21 +93,21 @@ public class ProductTypeServiceImpl implements ProductTypeService {
     @Override
     public ProductTypeDTO updateProductType(Long id, ProductTypeDTO productTypeToUpdate) {
         try {
-            var updatedProductType = productConverter.toProductType(productTypeToUpdate);
+            var updatedProductType = productTypeMapper.toProductType(productTypeToUpdate);
             var existingProductType = productTypeRepository
                     .findById(id)
                     .orElseThrow(() -> {
-                        throw new ResourceNotFoundException("Product type not found for id " + id);
+                        throw new ResourceNotFoundException(getProductTypeNotFoundMessage(id));
                     });
 
-            existingProductType.setName(updatedProductType.getName());
+            existingProductType.updateName(updatedProductType.getName());
 
-            return productConverter.toProductTypeDTO(productTypeRepository.save(existingProductType));
+            return productTypeMapper.toProductTypeDTO(productTypeRepository.save(existingProductType));
         } catch (ResourceNotFoundException rnfExc) {
             logger.error(rnfExc.getMessage());
             throw rnfExc;
         } catch (Exception e) {
-            logger.error("updateProductType({}, {}): couldn't update product type", id, productTypeToUpdate, e);
+            logger.error("updateProductType({}, {}): ", id, productTypeToUpdate, e);
             throw new ServiceException("Couldn't update product type", e);
         }
     }
@@ -123,7 +123,7 @@ public class ProductTypeServiceImpl implements ProductTypeService {
             var productTypeToDelete = productTypeRepository
                     .findById(id)
                     .orElseThrow(() -> {
-                        throw new ResourceNotFoundException("Product type not found for id " + id);
+                        throw new ResourceNotFoundException(getProductTypeNotFoundMessage(id));
                     });
 
             productTypeRepository.delete(productTypeToDelete);
@@ -131,8 +131,12 @@ public class ProductTypeServiceImpl implements ProductTypeService {
             logger.error(rfnExc.getMessage());
             throw rfnExc;
         } catch (Exception e) {
-            logger.error("deleteProductTypeById({}): couldn't delete product type", id, e);
+            logger.error("deleteProductTypeById({}): ", id, e);
             throw new ServiceException("Couldn't delete product type", e);
         }
+    }
+
+    private String getProductTypeNotFoundMessage(Long id) {
+        return "Product type not found for id " + id;
     }
 }
