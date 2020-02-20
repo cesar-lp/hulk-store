@@ -3,15 +3,18 @@ package com.todo.hulkstore.mapper;
 import com.todo.hulkstore.domain.ProductType;
 import com.todo.hulkstore.dto.ProductTypeDTO;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SpringBootTest
 public class ProductTypeMapperTest {
 
-    private ProductTypeMapper mapper = Mappers.getMapper(ProductTypeMapper.class);
+    @Autowired
+    private ProductTypeMapper mapper;
 
     @Test
     void shouldMapToProductTypeDTOSuccessfully() {
@@ -43,3 +46,4 @@ public class ProductTypeMapperTest {
         assertTrue(productTypeDTOList.isEmpty());
     }
 }
+

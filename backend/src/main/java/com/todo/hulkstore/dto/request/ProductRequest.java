@@ -21,7 +21,7 @@ public class ProductRequest implements Serializable {
 
     Long id;
 
-    @NotBlank(message = "Name cannot be blank")
+    @NotBlank(message = "Name is required")
     String name;
 
     @NotNull(message = "Product type id is required")

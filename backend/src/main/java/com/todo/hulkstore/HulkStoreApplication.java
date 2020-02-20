@@ -3,7 +3,7 @@ package com.todo.hulkstore;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-// TODO: Use MapStruct
+// TODO: fix validation tests (controllers)
 // TODO: Export to CSV, Excel & PDF
 // TODO: DB: Implementations
 // TODO: Auth & Permissions

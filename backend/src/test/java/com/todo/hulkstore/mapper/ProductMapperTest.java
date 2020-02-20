@@ -6,7 +6,8 @@ import com.todo.hulkstore.dto.request.ProductRequest;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
 
@@ -17,10 +18,12 @@ import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SpringBootTest
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductMapperTest {
 
-    ProductMapper productMapper = Mappers.getMapper(ProductMapper.class);
+    @Autowired
+    ProductMapper productMapper;
 
     @Test
     void shouldMapProductToProductResponseSuccessfully() {

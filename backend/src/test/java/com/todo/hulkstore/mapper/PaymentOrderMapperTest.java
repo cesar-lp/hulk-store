@@ -4,8 +4,11 @@ import com.todo.hulkstore.domain.PaymentOrder;
 import com.todo.hulkstore.domain.ProductOrder;
 import com.todo.hulkstore.domain.embedded.ProductDetail;
 import com.todo.hulkstore.dto.ProductOrderDTO;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,9 +19,12 @@ import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SpringBootTest
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class PaymentOrderMapperTest {
 
-    PaymentOrderMapper mapper = Mappers.getMapper(PaymentOrderMapper.class);
+    @Autowired
+    PaymentOrderMapper mapper;
 
     @Test
     void shouldMapPaymentOrderToPaymentOrderResponse() {

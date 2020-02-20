@@ -1,12 +1,22 @@
 package com.todo.hulkstore.exception.error;
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import org.springframework.validation.FieldError;
 
 import javax.validation.ConstraintViolation;
 import java.io.Serializable;
 
+@Getter
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FieldValidationError implements Serializable {
 

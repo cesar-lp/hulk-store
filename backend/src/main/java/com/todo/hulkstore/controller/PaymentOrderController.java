@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @AllArgsConstructor
@@ -25,7 +26,7 @@ import java.util.List;
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
 )
-public class OrderController {
+public class PaymentOrderController {
 
     PaymentOrderService paymentOrderService;
 
@@ -37,7 +38,7 @@ public class OrderController {
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public PaymentOrderResponse registerPaymentOrder(@RequestBody PaymentOrderRequest paymentOrderRequest) {
+    public PaymentOrderResponse registerPaymentOrder(@RequestBody @Valid PaymentOrderRequest paymentOrderRequest) {
         return paymentOrderService.registerPaymentOrder(paymentOrderRequest);
     }
 }

@@ -7,7 +7,7 @@ import javax.validation.Validator;
 import java.util.HashMap;
 import java.util.List;
 
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 public abstract class ValidationEntity<T> {
 
@@ -27,7 +27,7 @@ public abstract class ValidationEntity<T> {
                     errors.get(violation.getPropertyPath().toString()).add(violation.getMessage());
                     continue;
                 }
-                errors.put(violation.getPropertyPath().toString(), asList(violation.getMessage()));
+                errors.put(violation.getPropertyPath().toString(), singletonList(violation.getMessage()));
             }
 
             throw new InvalidEntityStateException(errors);
