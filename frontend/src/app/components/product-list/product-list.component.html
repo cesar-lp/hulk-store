@@ -7,6 +7,7 @@
       <button mat-icon-button title="Create product" (click)="handleProduct()">
         <mat-icon class="icon-new">add</mat-icon>
       </button>
+      <file-downloader [formats]="fileFormats" (requestDownload)="download($event)"></file-downloader>
     </div>
   </div>
 </div>

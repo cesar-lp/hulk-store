@@ -4,6 +4,7 @@ import com.todo.hulkstore.domain.common.ValidationEntity;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
 @Builder
 @ToString
 @Embeddable
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductDetail extends ValidationEntity<ProductDetail> {
 

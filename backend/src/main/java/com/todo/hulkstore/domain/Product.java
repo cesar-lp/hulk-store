@@ -2,8 +2,10 @@ package com.todo.hulkstore.domain;
 
 import com.todo.hulkstore.domain.common.ValidationEntity;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import javax.persistence.Entity;
@@ -25,6 +27,7 @@ import static com.todo.hulkstore.utils.ValidationUtils.checkNotNullNorNegative;
 @Entity
 @Builder
 @Table(name = "product")
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Product extends ValidationEntity<Product> {
 

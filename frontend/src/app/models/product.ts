@@ -9,3 +9,9 @@ export interface Product {
 
   isSelected: boolean;
 }
+
+export enum ProductStockCondition {
+  ALL = 'all',
+  AVAILABLE = 'available',
+  UNAVAILABLE = 'unavailable'
+}

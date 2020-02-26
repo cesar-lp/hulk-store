@@ -5,6 +5,7 @@ import com.todo.hulkstore.exception.InvalidEntityStateException;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -28,6 +29,7 @@ import static com.todo.hulkstore.utils.NumberUtils.roundToTwoDecimalPlaces;
 @Entity
 @Builder
 @Getter
+@NoArgsConstructor
 @Table(name = "payment_order")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PaymentOrder extends ValidationEntity<PaymentOrder> {

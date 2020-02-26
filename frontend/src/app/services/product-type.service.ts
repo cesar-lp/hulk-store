@@ -3,11 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { ProductType } from '../models/product-type';
+import { FileType } from './../constants/file-type';
 
 @Injectable()
 export class ProductTypeService {
 
-  private baseUrl = "http://localhost:8080/api/product-types";
+  private baseUrl = 'http://localhost:8080/api/product-types';
 
   constructor(private httpService: HttpClient) { }
 
@@ -31,4 +32,9 @@ export class ProductTypeService {
     return this.httpService.delete<void>(`${this.baseUrl}/${id}`);
   }
 
+  download(fileType: FileType): Observable<Blob> {
+    return this.httpService.get(
+      `${this.baseUrl}/export?format=${fileType}`,
+      { responseType: 'blob' });
+  }
 }

@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 
+import { FileType } from './../../constants/file-type';
+import { FileDownloadService } from './../../services/file-download.service';
 import { ProductTypeService } from 'src/app/services/product-type.service';
 import { ProductType } from 'src/app/models/product-type';
 import { ConfirmationDialogComponent } from '../dialog/confirmation-dialog/confirmation-dialog.component';
@@ -10,15 +12,21 @@ import { ProductTypeDialogComponent } from '../product-type-modal/product-type-d
 @Component({
   selector: 'product-type-list',
   templateUrl: './product-type-list.component.html',
-  providers: [NotificationService, ProductTypeService]
+  providers: [
+    FileDownloadService,
+    NotificationService,
+    ProductTypeService
+  ]
 })
-export class ProductTypeListComponent {
+export class ProductTypeListComponent implements OnInit {
 
   productTypes: ProductType[] = [];
   displayedProductTypeColumns: string[] = ['id', 'name', 'actions'];
+  fileFormats = [FileType.CSV, FileType.EXCEL];
 
   constructor(
     public dialog: MatDialog,
+    private fileUtils: FileDownloadService,
     private notificationService: NotificationService,
     private productTypeService: ProductTypeService) { }
 
@@ -49,7 +57,7 @@ export class ProductTypeListComponent {
   editProductType(productType: ProductType) {
     const dialog = this.dialog.open(ProductTypeDialogComponent, {
       data: {
-        productType: productType,
+        productType,
         title: 'Edit product type',
         primaryButtonText: 'Edit'
       }
@@ -59,7 +67,7 @@ export class ProductTypeListComponent {
       .afterClosed()
       .subscribe((updatedProductType: ProductType) => {
         if (updatedProductType) {
-          const i = this.productTypes.findIndex(productType => productType.id == updatedProductType.id);
+          const i = this.productTypes.findIndex(type => type.id == updatedProductType.id);
           this.productTypes[i] = updatedProductType;
           this.productTypes = this.productTypes.slice();
         }
@@ -67,7 +75,7 @@ export class ProductTypeListComponent {
   }
 
   deleteProductType(id: number) {
-    const message = "Delete product type? This will also remove all associated products"
+    const message = 'Delete product type? This will also remove all associated products';
 
     const dialogRef = this.openDialog(ConfirmationDialogComponent, 'Delete product type', 'Delete', message);
 
@@ -80,12 +88,18 @@ export class ProductTypeListComponent {
     });
   }
 
+  download(fileType: FileType) {
+    this.productTypeService
+      .download(fileType)
+      .subscribe(file => this.fileUtils.download(file, 'product_types.csv'));
+  }
+
   private openDialog(dialogComponent: any, title: string, primaryButtonText: string, message?: string) {
     return this.dialog.open(dialogComponent, {
       data: {
         dialogTitle: title,
         confirmationMessage: message,
-        primaryButtonText: primaryButtonText
+        primaryButtonText
       }
     });
   }

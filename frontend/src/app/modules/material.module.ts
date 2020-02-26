@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
@@ -18,6 +19,7 @@ import { MatInputModule } from '@angular/material/input';
 const modules = [
   MatToolbarModule,
   MatSidenavModule,
+  MatMenuModule,
   MatIconModule,
   MatTableModule,
   MatButtonModule,

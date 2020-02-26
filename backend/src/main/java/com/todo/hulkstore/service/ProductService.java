@@ -1,14 +1,18 @@
 package com.todo.hulkstore.service;
 
+import com.todo.hulkstore.constants.FileType;
+import com.todo.hulkstore.constants.ProductStockCondition;
 import com.todo.hulkstore.dto.request.ProductRequest;
 import com.todo.hulkstore.dto.response.ProductResponse;
 
+import java.io.PrintWriter;
 import java.util.List;
-import java.util.Optional;
 
 public interface ProductService {
 
-    List<ProductResponse> getAllProducts(Optional<Boolean> inStock);
+    List<ProductResponse> getAllProducts(ProductStockCondition stockCondition);
+
+    void exportToFile(PrintWriter writer, FileType fileType, ProductStockCondition stockCondition);
 
     ProductResponse getProductById(Long id);
 

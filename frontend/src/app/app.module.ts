@@ -1,3 +1,4 @@
+import { FileDownloaderComponent } from './components/file-downloader/file-downloader.component';
 import { NgModule } from '@angular/core';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -28,6 +29,7 @@ import { ProductOrderComponent } from './components/product-order/product-order.
     ProductTypeDialogComponent,
     ProductOrderListComponent,
     ProductOrderComponent,
+    FileDownloaderComponent
   ],
   imports: [
     BrowserModule,

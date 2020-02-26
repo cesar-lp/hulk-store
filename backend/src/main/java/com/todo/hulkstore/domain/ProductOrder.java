@@ -6,6 +6,7 @@ import com.todo.hulkstore.exception.InvalidEntityStateException;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 
@@ -26,6 +27,7 @@ import static com.todo.hulkstore.utils.NumberUtils.roundToTwoDecimalPlaces;
 @Entity
 @Builder
 @ToString
+@NoArgsConstructor
 @Table(name = "product_order")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductOrder extends ValidationEntity<ProductOrder> {

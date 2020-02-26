@@ -1,8 +1,11 @@
 package com.todo.hulkstore.controller;
 
+import com.todo.hulkstore.constants.FileType;
+import com.todo.hulkstore.constants.ProductStockCondition;
 import com.todo.hulkstore.dto.request.ProductRequest;
 import com.todo.hulkstore.dto.response.ProductResponse;
 import com.todo.hulkstore.service.ProductService;
+import com.todo.hulkstore.utils.FileUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -19,9 +22,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -35,10 +39,22 @@ public class ProductController {
 
     ProductService productService;
 
+    static String FILE_NAME = "products";
+
     @GetMapping("")
     @ResponseStatus(HttpStatus.OK)
-    public List<ProductResponse> getAllProducts(@RequestParam Optional<Boolean> inStock) {
-        return productService.getAllProducts(inStock);
+    public List<ProductResponse> getAllProducts(
+            @RequestParam(name = "stock", defaultValue = "ALL") ProductStockCondition stockCondition) {
+        return productService.getAllProducts(stockCondition);
+    }
+
+    @GetMapping(value = "/export")
+    @ResponseStatus(HttpStatus.OK)
+    public void exportToFile(@RequestParam("format") FileType fileType,
+                             @RequestParam("stock") ProductStockCondition stockCondition,
+                             HttpServletResponse response) throws IOException {
+        productService.exportToFile(response.getWriter(), fileType, stockCondition);
+        FileUtils.adaptHttpResponse(response, FILE_NAME, fileType);
     }
 
     @GetMapping("/{id}")

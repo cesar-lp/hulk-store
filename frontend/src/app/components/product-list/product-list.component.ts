@@ -3,25 +3,30 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
 import { ProductService } from 'src/app/services/product.service';
-import { Product } from 'src/app/models/product';
+import { Product, ProductStockCondition } from 'src/app/models/product';
 import { ConfirmationDialogComponent } from '../dialog/confirmation-dialog/confirmation-dialog.component';
 import { NotificationService } from 'src/app/services/notification.service';
+import { FileDownloadService } from './../../services/file-download.service';
+import { FileType } from 'src/app/constants/file-type';
 
 @Component({
   selector: 'product-list',
   templateUrl: './product-list.component.html',
   providers: [
-    ProductService,
-    NotificationService
+    FileDownloadService,
+    NotificationService,
+    ProductService
   ]
 })
 export class ProductListComponent implements OnInit {
 
   products: Product[] = [];
   displayedProductColumns: string[] = ['id', 'name', 'type', 'price', 'stock', 'actions'];
+  fileFormats = [FileType.CSV, FileType.EXCEL];
 
   constructor(
     public dialog: MatDialog,
+    private fileUtils: FileDownloadService,
     private productService: ProductService,
     private notificationService: NotificationService,
     private route: ActivatedRoute,
@@ -35,13 +40,10 @@ export class ProductListComponent implements OnInit {
   }
 
   handleDeleteProduct(id: number, name: string, action: string) {
-    let title = 'Delete Product';
-    let msg = `Delete ${name}?`;
-
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       data: {
-        dialogTitle: title,
-        confirmationMessage: msg,
+        dialogTitle: 'Delete Product',
+        confirmationMessage: `Delete ${name}?`,
         primaryButtonText: 'Delete'
       }
     });
@@ -53,6 +55,12 @@ export class ProductListComponent implements OnInit {
           .subscribe(_ => this.removeProductFromExistingList(id));
       }
     });
+  }
+
+  download(fileType: FileType) {
+    this.productService
+      .download(fileType, ProductStockCondition.ALL)
+      .subscribe(file => this.fileUtils.download(file, 'products.csv'));
   }
 
   handleProduct(id: number) {

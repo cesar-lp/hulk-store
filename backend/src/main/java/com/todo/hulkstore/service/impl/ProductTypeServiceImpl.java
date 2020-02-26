@@ -1,11 +1,14 @@
 package com.todo.hulkstore.service.impl;
 
+import com.todo.hulkstore.constants.FileType;
+import com.todo.hulkstore.domain.ProductType;
 import com.todo.hulkstore.dto.ProductTypeDTO;
 import com.todo.hulkstore.exception.ResourceNotFoundException;
 import com.todo.hulkstore.exception.ServiceException;
 import com.todo.hulkstore.mapper.ProductTypeMapper;
 import com.todo.hulkstore.repository.ProductTypeRepository;
 import com.todo.hulkstore.service.ProductTypeService;
+import com.todo.hulkstore.utils.CSVUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -13,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 
 @Service
@@ -37,6 +42,26 @@ public class ProductTypeServiceImpl implements ProductTypeService {
         } catch (Exception e) {
             logger.error("getAllProductTypes()", e);
             throw new ServiceException("Couldn't retrieve all product types", e);
+        }
+    }
+
+    @Override
+    public void exportToFile(PrintWriter writer, FileType fileType) {
+        var productTypes = getAllProductTypes();
+
+        try {
+            switch (fileType) {
+                case CSV:
+                    exportToCSV(writer, productTypes);
+                    break;
+                case EXCEL:
+                    break;
+                default:
+                    throw new IllegalArgumentException("Format type " + fileType.name() + " not valid");
+            }
+        } catch (IOException ioExc) {
+            logger.error("exportToFile({})", fileType.name(), ioExc);
+            throw new ServiceException("Couldn't export product types to " + fileType.name() + " format", ioExc);
         }
     }
 
@@ -133,6 +158,16 @@ public class ProductTypeServiceImpl implements ProductTypeService {
         } catch (Exception e) {
             logger.error("deleteProductTypeById({}): ", id, e);
             throw new ServiceException("Couldn't delete product type", e);
+        }
+    }
+
+    private void exportToCSV(PrintWriter writer, List<ProductTypeDTO> productTypes) throws IOException {
+        var headers = new String[]{"ID", "Name"};
+
+        try (var printer = CSVUtils.getPrinter(writer, headers)) {
+            for (ProductTypeDTO productType : productTypes) {
+                printer.printRecord(productType.getId(), productType.getName());
+            }
         }
     }
 
