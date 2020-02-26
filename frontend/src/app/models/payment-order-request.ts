@@ -1,8 +1,8 @@
 export interface PaymentOrderRequest {
-  productOrders: ProductOrderRequest[];
+  orderLines: OrderLineRequest[];
 }
 
-export interface ProductOrderRequest {
+export interface OrderLineRequest {
   productId: number;
   quantity: number;
 }

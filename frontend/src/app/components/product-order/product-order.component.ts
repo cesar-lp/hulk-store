@@ -9,7 +9,7 @@ import { PaymentOrderService } from 'src/app/services/payment-order.service';
 import { ProductService } from 'src/app/services/product.service';
 import { ConfirmationDialogComponent } from '../dialog/confirmation-dialog/confirmation-dialog.component';
 import { NotificationService } from 'src/app/services/notification.service';
-import { PaymentOrderRequest, ProductOrderRequest } from 'src/app/models/payment-order-request';
+import { PaymentOrderRequest, OrderLineRequest } from 'src/app/models/payment-order-request';
 
 @Component({
   selector: 'product-order',
@@ -198,17 +198,17 @@ export class ProductOrderComponent {
   }
 
   private mapFormToOrderRequest(): PaymentOrderRequest {
-    const productOrders: ProductOrderRequest[] = [];
+    const orderLines: OrderLineRequest[] = [];
 
     this.productOrders.controls.forEach(fg => {
-      const productOrder: ProductOrderRequest = {
+      const orderLineRequest: OrderLineRequest = {
         productId: fg.get('productId').value,
         quantity: fg.get('quantity').value
       };
-      productOrders.push(productOrder);
+      orderLines.push(orderLineRequest);
     });
 
-    return { productOrders };
+    return { orderLines };
   }
 
   private openConfirmationDialog(title: string, message: string, primaryButtonText: string) {
@@ -216,7 +216,7 @@ export class ProductOrderComponent {
       data: {
         dialogTitle: title,
         confirmationMessage: message,
-        primaryButtonText: primaryButtonText
+        primaryButtonText
       }
     });
   }

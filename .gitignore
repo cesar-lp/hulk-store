@@ -33,3 +33,5 @@ build/
 .vscode/
 
 frontend/.editorconfig
+
+\.idea/

@@ -1,13 +1,24 @@
-# Hulk Store
+# Hero Store
 
 ## Description
-This is an example of a product store webapp built with JAVA 11, Spring 5 (Boot, Core, JPA, Security, Web) and Angular 8. It'll be used as an example to explain (in a post series) how to build a complete CRUD app from scratch using modern day technologies and best practices.
+This is an example of a product store webapp built with JAVA and Angular. Its purpose is to demonstrate how a set of features are developed using good coding practices.
 
-## Roadmap
-- [ ] Frontend use case implementation (in progress)
-- [ ] Export to CSV, Excel & PDF
-- [ ] DB implementation
+### Features
+- Product type CRUD
+- Product CRUD
+- Create and retrieve product orders 
+- Export products and product types to CSV & Excel formats.
+
+### Roadmap
+- [ ] Frontend use case
+- [ ] Export product orders to PDF format.
+- [ ] PostgreSQL DB implementation
 - [ ] Auth & permissions
-- [ ] CI/CD?
-- [ ] Docker
-- [ ] Create post series!
+- [ ] Docker images
+- [ ] Cleanup
+
+### Stack
+- Java 11
+- Spring 5 (Boot, Core, JPA, Security, Web), Junit5
+- Angular 8 (HTML, CSS, SASS, Typescript)
+- Gradle
