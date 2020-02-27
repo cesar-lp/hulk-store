@@ -1,11 +1,14 @@
+import { map } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { ProductStockCondition } from './../models/product';
+import { createFileWrapper } from './../common/utils/file-utils';
 import { Product } from '../models/product';
 import { ProductRequest } from '../models/product-request';
-import { FileType } from '../constants/file-type';
+import { FileType } from '../common/models/file-type-handler';
+import { FileWrapper } from '../common/models/file-wrapper';
 
 @Injectable()
 export class ProductService {
@@ -40,9 +43,12 @@ export class ProductService {
     return this.httpService.delete<void>(`${this.baseUrl}/${id}`);
   }
 
-  download(fileType: FileType, stockCondition: ProductStockCondition): Observable<Blob> {
-    return this.httpService.get(
-      `${this.baseUrl}/export?format=${fileType}&stock=${stockCondition}`,
-      { responseType: 'blob' });
+  download(fileType: FileType, stockCondition: ProductStockCondition): Observable<FileWrapper> {
+    const url = `${this.baseUrl}/export?format=${fileType.format}&stock=${stockCondition}`;
+
+    return this.httpService.get<Blob>(url, { observe: 'response', responseType: 'blob' as 'json' })
+      .pipe(
+        map(response => createFileWrapper(response))
+      );
   }
 }

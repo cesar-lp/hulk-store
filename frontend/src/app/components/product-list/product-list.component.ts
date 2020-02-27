@@ -7,7 +7,7 @@ import { Product, ProductStockCondition } from 'src/app/models/product';
 import { ConfirmationDialogComponent } from '../dialog/confirmation-dialog/confirmation-dialog.component';
 import { NotificationService } from 'src/app/services/notification.service';
 import { FileDownloadService } from './../../services/file-download.service';
-import { FileType } from 'src/app/constants/file-type';
+import { FileType, FileTypeHandler } from 'src/app/common/models/file-type-handler';
 
 @Component({
   selector: 'product-list',
@@ -22,7 +22,7 @@ export class ProductListComponent implements OnInit {
 
   products: Product[] = [];
   displayedProductColumns: string[] = ['id', 'name', 'type', 'price', 'stock', 'actions'];
-  fileFormats = [FileType.CSV, FileType.EXCEL];
+  fileFormats = FileTypeHandler.formats;
 
   constructor(
     public dialog: MatDialog,
@@ -60,7 +60,7 @@ export class ProductListComponent implements OnInit {
   download(fileType: FileType) {
     this.productService
       .download(fileType, ProductStockCondition.ALL)
-      .subscribe(file => this.fileUtils.download(file, 'products.csv'));
+      .subscribe(fileWrapper => this.fileUtils.download(fileWrapper));
   }
 
   handleProduct(id: number) {

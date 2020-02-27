@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 
-import { FileType } from './../../constants/file-type';
+import { FileType, FileTypeHandler } from '../../common/models/file-type-handler';
 import { FileDownloadService } from './../../services/file-download.service';
 import { ProductTypeService } from 'src/app/services/product-type.service';
 import { ProductType } from 'src/app/models/product-type';
@@ -22,7 +22,7 @@ export class ProductTypeListComponent implements OnInit {
 
   productTypes: ProductType[] = [];
   displayedProductTypeColumns: string[] = ['id', 'name', 'actions'];
-  fileFormats = [FileType.CSV, FileType.EXCEL];
+  fileFormats = FileTypeHandler.formats;
 
   constructor(
     public dialog: MatDialog,
@@ -91,7 +91,7 @@ export class ProductTypeListComponent implements OnInit {
   download(fileType: FileType) {
     this.productTypeService
       .download(fileType)
-      .subscribe(file => this.fileUtils.download(file, 'product_types.csv'));
+      .subscribe(fileWrapper => this.fileUtils.download(fileWrapper));
   }
 
   private openDialog(dialogComponent: any, title: string, primaryButtonText: string, message?: string) {

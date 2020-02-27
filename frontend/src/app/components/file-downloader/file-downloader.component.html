@@ -2,5 +2,5 @@
   <mat-icon class="icon-new">cloud_download</mat-icon>
 </button>
 <mat-menu #fileFormats="matMenu">
-  <button *ngFor="let format of formats" mat-menu-item (click)="onRequestDownload(format)">{{format}}</button>
+  <button *ngFor="let format of formats" mat-menu-item (click)="onRequestDownload(format)">{{format.description}}</button>
 </mat-menu>

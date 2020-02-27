@@ -1,6 +1,6 @@
 import { Component, Output, EventEmitter, Input } from '@angular/core';
 
-import { FileType } from './../../constants/file-type';
+import { FileType } from '../../common/models/file-type-handler';
 
 @Component({
   selector: 'file-downloader',
@@ -9,9 +9,10 @@ import { FileType } from './../../constants/file-type';
 export class FileDownloaderComponent {
 
   @Input() formats: FileType[];
+
   @Output() requestDownload = new EventEmitter<FileType>();
 
-  onRequestDownload(fileType: string) {
-    this.requestDownload.emit(FileType[fileType]);
+  onRequestDownload(fileType: FileType) {
+    this.requestDownload.emit(fileType);
   }
 }
