@@ -1,14 +1,15 @@
 package com.herostore.products.service.impl;
 
-import com.herostore.products.exception.ResourceNotFoundException;
-import com.herostore.products.exception.ServiceException;
-import com.herostore.products.io.CSVHandler;
-import com.herostore.products.repository.ProductTypeRepository;
-import com.herostore.products.service.ProductTypeService;
 import com.herostore.products.constants.FileType;
 import com.herostore.products.dto.ProductTypeDTO;
+import com.herostore.products.exception.ResourceNotFoundException;
+import com.herostore.products.exception.ServiceException;
+import com.herostore.products.io.CSVWriter;
+import com.herostore.products.io.ExcelWriter;
+import com.herostore.products.io.WorkbookData;
 import com.herostore.products.mapper.ProductTypeMapper;
-import com.herostore.products.io.ExcelHandler;
+import com.herostore.products.repository.ProductTypeRepository;
+import com.herostore.products.service.ProductTypeService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -16,10 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.util.List;
 
 @Service
@@ -31,6 +30,8 @@ public class ProductTypeServiceImpl implements ProductTypeService {
 
     ProductTypeRepository productTypeRepository;
     ProductTypeMapper productTypeMapper;
+    CSVWriter csvWriter;
+    ExcelWriter excelWriter;
 
     /**
      * Retrieves all existing product types.
@@ -47,24 +48,30 @@ public class ProductTypeServiceImpl implements ProductTypeService {
         }
     }
 
+    /**
+     * Exports all product types to a file.
+     *
+     * @param os       output stream to which the file will be written.
+     * @param fileType file type (PDF, Excel, CSV) to export.
+     */
     @Override
-    public void exportToFile(HttpServletResponse response, FileType fileType) {
+    public void exportProductTypesToFile(OutputStream os, FileType fileType) {
         var productTypes = getAllProductTypes();
 
         try {
             switch (fileType) {
                 case CSV:
-                    exportToCSV(response.getWriter(), productTypes);
+                    exportToCSV(os, productTypes);
                     break;
                 case EXCEL:
-                    exportToExcel(response.getOutputStream(), productTypes);
+                    exportToExcel(os, productTypes);
                     break;
                 default:
                     throw new IllegalArgumentException("Format type " + fileType.name() + " not valid");
             }
         } catch (IOException ioExc) {
-            logger.error("exportToFile({})", fileType.name(), ioExc);
-            throw new ServiceException("Couldn't export product types to " + fileType.name() + " format", ioExc);
+            logger.error("Couldn't write product types to {} file format", fileType.getDesc(), ioExc);
+            throw new ServiceException("Couldn't write product types to " + fileType.getDesc() + " file format", ioExc);
         }
     }
 
@@ -164,14 +171,11 @@ public class ProductTypeServiceImpl implements ProductTypeService {
         }
     }
 
-    private void exportToCSV(PrintWriter writer, List<ProductTypeDTO> productTypes) throws IOException {
+    private void exportToCSV(OutputStream os, List<ProductTypeDTO> productTypes) throws IOException {
         var headers = new String[]{"ID", "Name"};
+        var fields = new String[]{"id", "name"};
 
-        try (var printer = CSVHandler.getPrinter(writer, headers)) {
-            for (ProductTypeDTO productType : productTypes) {
-                printer.printRecord(productType.getId(), productType.getName());
-            }
-        }
+        csvWriter.write(os, headers, fields, productTypes);
     }
 
     private void exportToExcel(OutputStream outputStream, List<ProductTypeDTO> productTypes) throws IOException {
@@ -179,14 +183,15 @@ public class ProductTypeServiceImpl implements ProductTypeService {
         var headers = new String[]{"ID", "Name"};
         var fields = new String[]{"id", "name"};
 
-        var excelHandler = ExcelHandler.workbookBuilder()
+        var workbookData = WorkbookData.builder()
                 .sheetName("Product Types")
                 .columnWidths(columnWidths)
                 .headers(headers)
                 .fields(fields)
                 .build();
 
-        excelHandler.writeWorkbook(productTypes, outputStream);
+        excelWriter.withData(workbookData);
+        excelWriter.writeWorkbook(outputStream, productTypes);
     }
 
     private String getProductTypeNotFoundMessage(Long id) {

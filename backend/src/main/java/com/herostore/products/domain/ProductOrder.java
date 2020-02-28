@@ -1,9 +1,9 @@
 package com.herostore.products.domain;
 
-import com.herostore.products.utils.NumberUtils;
 import com.herostore.products.domain.common.ValidationEntity;
 import com.herostore.products.domain.embedded.ProductDetail;
 import com.herostore.products.exception.InvalidEntityStateException;
+import com.herostore.products.utils.NumberUtils;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;

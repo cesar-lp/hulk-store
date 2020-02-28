@@ -1,17 +1,19 @@
 import { trigger, state, style, transition, animate } from '@angular/animations';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { PaymentOrderService } from 'src/app/services/payment-order.service';
 import { PaymentOrder } from 'src/app/models/payment-order';
 import { DataSource } from '@angular/cdk/table';
 import { Observable, of } from 'rxjs';
+import { FileTypeHandler, FileType } from 'src/app/common/models/file-type-handler';
+import { FileDownloadService } from 'src/app/services/file-download.service';
 
 @Component({
   selector: 'product-order-list',
   templateUrl: './product-order-list.component.html',
   styleUrls: ['./product-order-list.component.css'],
-  providers: [PaymentOrderService],
+  providers: [FileDownloadService, PaymentOrderService],
   animations: [
     trigger('detailExpand', [
       state('collapsed', style({ height: '0px', minHeight: '0', visibility: 'hidden' })),
@@ -20,14 +22,16 @@ import { Observable, of } from 'rxjs';
     ]),
   ],
 })
-export class ProductOrderListComponent {
+export class ProductOrderListComponent implements OnInit {
 
   paymentOrders;
   displayedColumns = ["id", "date", "productsAmount", "total"];
+  fileFormats = [FileTypeHandler.PDF];
   isExpansionDetailRow = (i: number, row: Object) => row.hasOwnProperty('detailRow');
   expandedElement: any;
 
   constructor(
+    private fileUtils: FileDownloadService,
     private paymentOrderService: PaymentOrderService,
     private router: Router) { }
 
@@ -41,6 +45,12 @@ export class ProductOrderListComponent {
 
   createProductOrder() {
     this.router.navigate(['/product-orders/new']);
+  }
+
+  download(fileType: FileType) {
+    this.paymentOrderService
+      .download(fileType)
+      .subscribe(fileWrapper => this.fileUtils.download(fileWrapper));
   }
 }
 

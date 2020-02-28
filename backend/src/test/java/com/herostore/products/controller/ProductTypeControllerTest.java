@@ -1,11 +1,11 @@
 package com.herostore.products.controller;
 
-import com.herostore.products.utils.ResponseBodyMatchers;
-import com.herostore.products.utils.SerializationUtils;
 import com.herostore.products.dto.ProductTypeDTO;
 import com.herostore.products.exception.ResourceNotFoundException;
 import com.herostore.products.exception.error.FieldValidationError;
 import com.herostore.products.service.ProductTypeService;
+import com.herostore.products.utils.ResponseBodyMatchers;
+import com.herostore.products.utils.SerializationUtils;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
@@ -15,10 +15,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static com.herostore.products.utils.ResponseBodyMatchers.responseContainsJsonCollection;
+import static com.herostore.products.utils.ResponseBodyMatchers.responseContainsJsonObject;
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -52,7 +54,22 @@ public class ProductTypeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(ResponseBodyMatchers.responseContainsJsonCollection(expectedProductTypesFound, ProductTypeDTO.class));
+                .andExpect(responseContainsJsonCollection(expectedProductTypesFound, ProductTypeDTO.class));
+    }
+
+    @Test
+    void exportProductTypesToFile() throws Exception {
+        var response = mockMvc.perform(
+                get(BASE_URI + "/export")
+                        .param("format", "csv")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse();
+
+        assertEquals(MediaType.APPLICATION_OCTET_STREAM_VALUE, response.getContentType());
+        assertEquals("attachment; filename=product-types.csv",
+                response.getHeaderValue("content-disposition"));
     }
 
     @Test
@@ -67,7 +84,7 @@ public class ProductTypeControllerTest {
                 get("{base-uri}/{id}", BASE_URI, id)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(ResponseBodyMatchers.responseContainsJsonObject(expectedProductType, ProductTypeDTO.class));
+                .andExpect(responseContainsJsonObject(expectedProductType, ProductTypeDTO.class));
     }
 
     @Test
@@ -83,7 +100,7 @@ public class ProductTypeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(SerializationUtils.objectMapper.writeValueAsBytes(newProductType)))
                 .andExpect(status().isCreated())
-                .andExpect(ResponseBodyMatchers.responseContainsJsonObject(expectedProductTypeCreated, ProductTypeDTO.class));
+                .andExpect(responseContainsJsonObject(expectedProductTypeCreated, ProductTypeDTO.class));
     }
 
     @Test
@@ -118,7 +135,7 @@ public class ProductTypeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(SerializationUtils.objectMapper.writeValueAsBytes(productTypeToUpdate)))
                 .andExpect(status().isOk())
-                .andExpect(ResponseBodyMatchers.responseContainsJsonObject(updatedProductType, ProductTypeDTO.class));
+                .andExpect(responseContainsJsonObject(updatedProductType, ProductTypeDTO.class));
     }
 
     /*@Test

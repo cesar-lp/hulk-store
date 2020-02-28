@@ -1,13 +1,13 @@
 package com.herostore.products.controller;
 
+import com.herostore.products.constants.FileType;
 import com.herostore.products.dto.ProductOrderDTO;
-import com.herostore.products.dto.response.PaymentOrderResponse;
-import com.herostore.products.utils.ResponseBodyMatchers;
-import com.herostore.products.utils.SerializationUtils;
 import com.herostore.products.dto.request.OrderLineRequest;
 import com.herostore.products.dto.request.PaymentOrderRequest;
+import com.herostore.products.dto.response.PaymentOrderResponse;
 import com.herostore.products.exception.error.FieldValidationError;
 import com.herostore.products.service.PaymentOrderService;
+import com.herostore.products.utils.SerializationUtils;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
@@ -20,9 +20,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import static com.herostore.products.utils.ResponseBodyMatchers.response;
+import static com.herostore.products.utils.ResponseBodyMatchers.responseContainsJsonCollection;
+import static com.herostore.products.utils.ResponseBodyMatchers.responseContainsJsonObject;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -58,7 +62,22 @@ public class PaymentOrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(ResponseBodyMatchers.responseContainsJsonCollection(expectedPaymentOrders, PaymentOrderResponse.class));
+                .andExpect(responseContainsJsonCollection(expectedPaymentOrders, PaymentOrderResponse.class));
+    }
+
+    @Test
+    void exportPaymentOrders() throws Exception {
+        var response = mockMvc.perform(
+                get(BASE_URI + "/export")
+                        .param("format", FileType.PDF.getDesc())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse();
+
+        assertEquals(MediaType.APPLICATION_OCTET_STREAM_VALUE, response.getContentType());
+        assertEquals("attachment; filename=payment_orders.pdf",
+                response.getHeaderValue("content-disposition"));
     }
 
     @Test
@@ -87,7 +106,7 @@ public class PaymentOrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(SerializationUtils.objectMapper.writeValueAsBytes(paymentOrder)))
                 .andExpect(status().isCreated())
-                .andExpect(ResponseBodyMatchers.responseContainsJsonObject(expectedPaymentOrder, PaymentOrderResponse.class));
+                .andExpect(responseContainsJsonObject(expectedPaymentOrder, PaymentOrderResponse.class));
     }
 
     @Test
@@ -104,7 +123,7 @@ public class PaymentOrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(SerializationUtils.objectMapper.writeValueAsBytes(paymentOrder)))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(ResponseBodyMatchers.response().containsValidationErrors(expectedErrors));
+                .andExpect(response().containsValidationErrors(expectedErrors));
     }
 
     private ProductOrderDTO mockIronManProductOrder() {

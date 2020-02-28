@@ -1,17 +1,19 @@
 package com.herostore.products.service.impl;
 
-import com.herostore.products.domain.ProductOrder;
-import com.herostore.products.domain.embedded.ProductDetail;
-import com.herostore.products.dto.ProductOrderDTO;
-import com.herostore.products.dto.response.PaymentOrderResponse;
+import com.herostore.products.constants.FileType;
 import com.herostore.products.domain.PaymentOrder;
 import com.herostore.products.domain.Product;
+import com.herostore.products.domain.ProductOrder;
 import com.herostore.products.domain.ProductType;
+import com.herostore.products.domain.embedded.ProductDetail;
+import com.herostore.products.dto.ProductOrderDTO;
 import com.herostore.products.dto.request.OrderLineRequest;
 import com.herostore.products.dto.request.PaymentOrderRequest;
+import com.herostore.products.dto.response.PaymentOrderResponse;
 import com.herostore.products.exception.InvalidProductOrderException;
 import com.herostore.products.exception.ResourceNotFoundException;
 import com.herostore.products.exception.error.InvalidProductOrderError;
+import com.herostore.products.handler.PaymentOrdersPDFWriter;
 import com.herostore.products.mapper.PaymentOrderMapper;
 import com.herostore.products.repository.PaymentOrderRepository;
 import com.herostore.products.repository.ProductRepository;
@@ -24,6 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -57,12 +60,15 @@ public class PaymentOrderServiceImplTest {
     @Mock
     PaymentOrderMapper paymentOrderMapper;
 
+    @Mock
+    PaymentOrdersPDFWriter paymentOrdersPDFWriter;
+
     @InjectMocks
     PaymentOrderServiceImpl paymentOrderService;
 
     @AfterEach
     void afterEach() {
-        verifyNoMoreInteractions(paymentOrderRepository, productRepository, paymentOrderMapper);
+        verifyNoMoreInteractions(paymentOrderRepository, productRepository, paymentOrderMapper, paymentOrdersPDFWriter);
     }
 
     @Test
@@ -101,6 +107,57 @@ public class PaymentOrderServiceImplTest {
 
         verify(paymentOrderRepository, times(1)).findAll();
         verify(paymentOrderMapper, times(1)).toPaymentOrderResponseList(existingPaymentOrderDetails);
+    }
+
+    @Test
+    void shouldWritePaymentOrdersToPDFSuccessfully() {
+        var existingPaymentOrders = mockExistingPaymentOrders();
+        var expectedPaymentOrders = mockExistingPaymentOrdersResponse(existingPaymentOrders);
+
+        when(paymentOrderRepository.findAll())
+                .thenReturn(existingPaymentOrders);
+
+        when(paymentOrderMapper.toPaymentOrderResponseList(existingPaymentOrders))
+                .thenReturn(expectedPaymentOrders);
+
+        var outputStream = new ByteArrayOutputStream();
+
+        paymentOrderService.exportPaymentOrders(outputStream, FileType.PDF);
+
+        verify(paymentOrderRepository, times(1)).findAll();
+        verify(paymentOrderMapper, times(1)).toPaymentOrderResponseList(existingPaymentOrders);
+        verify(paymentOrdersPDFWriter, times(1)).setPaymentOrders(expectedPaymentOrders);
+        verify(paymentOrdersPDFWriter, times(1)).createDocument(outputStream);
+        verify(paymentOrdersPDFWriter, times(1)).openDocument();
+        verify(paymentOrdersPDFWriter, times(1)).writeDocument();
+        verify(paymentOrdersPDFWriter, times(1)).closeDocument();
+    }
+
+    @Test
+    void shouldThrowExceptionWhenExportingToInvalidFileFormat() {
+        var existingPaymentOrders = mockExistingPaymentOrders();
+        var expectedPaymentOrders = mockExistingPaymentOrdersResponse(existingPaymentOrders);
+        var expectedError = "File format csv not valid.";
+
+        when(paymentOrderRepository.findAll())
+                .thenReturn(existingPaymentOrders);
+
+        when(paymentOrderMapper.toPaymentOrderResponseList(existingPaymentOrders))
+                .thenReturn(expectedPaymentOrders);
+
+        var outputStream = new ByteArrayOutputStream();
+
+        var exc = assertThrows(IllegalArgumentException.class,
+                () -> paymentOrderService.exportPaymentOrders(outputStream, FileType.CSV));
+
+        assertEquals(expectedError, exc.getMessage());
+
+        expectedError = "File format xlsx not valid.";
+
+        exc = assertThrows(IllegalArgumentException.class,
+                () -> paymentOrderService.exportPaymentOrders(outputStream, FileType.EXCEL));
+
+        assertEquals(expectedError, exc.getMessage());
     }
 
     @Test

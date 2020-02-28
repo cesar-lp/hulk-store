@@ -1,19 +1,21 @@
 package com.herostore.products.service.impl;
 
+import com.herostore.products.constants.FileType;
 import com.herostore.products.domain.PaymentOrder;
 import com.herostore.products.domain.Product;
 import com.herostore.products.domain.ProductOrder;
 import com.herostore.products.domain.embedded.ProductDetail;
+import com.herostore.products.dto.request.OrderLineRequest;
 import com.herostore.products.dto.request.PaymentOrderRequest;
 import com.herostore.products.dto.response.PaymentOrderResponse;
+import com.herostore.products.exception.InvalidProductOrderException;
 import com.herostore.products.exception.ResourceNotFoundException;
 import com.herostore.products.exception.ServiceException;
+import com.herostore.products.exception.error.InvalidProductOrderError;
+import com.herostore.products.handler.PaymentOrdersPDFWriter;
 import com.herostore.products.mapper.PaymentOrderMapper;
 import com.herostore.products.repository.PaymentOrderRepository;
 import com.herostore.products.repository.ProductRepository;
-import com.herostore.products.dto.request.OrderLineRequest;
-import com.herostore.products.exception.InvalidProductOrderException;
-import com.herostore.products.exception.error.InvalidProductOrderError;
 import com.herostore.products.service.PaymentOrderService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -22,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +41,7 @@ public class PaymentOrderServiceImpl implements PaymentOrderService {
     PaymentOrderRepository paymentOrderRepository;
     PaymentOrderMapper paymentOrderMapper;
     ProductRepository productRepository;
+    PaymentOrdersPDFWriter pdfHandler;
 
     /**
      * Returns existing payment orders.
@@ -92,6 +96,33 @@ public class PaymentOrderServiceImpl implements PaymentOrderService {
         } catch (Exception e) {
             logger.error("Couldn't register payment order", e);
             throw new ServiceException("Couldn't register payment order", e);
+        }
+    }
+
+    /**
+     * Exports all payment orders to a file.
+     *
+     * @param os       output stream that the file will be written to.
+     * @param fileType file type (PDF, Excel, CSV) to export.
+     */
+    @Override
+    public void exportPaymentOrders(OutputStream os, FileType fileType) {
+        try {
+            var paymentOrders = getAllPaymentOrders();
+
+            if (fileType != FileType.PDF) {
+                throw new IllegalArgumentException("File format " + fileType.getDesc() + " not valid.");
+            }
+
+            pdfHandler.setPaymentOrders(paymentOrders);
+            pdfHandler.createDocument(os);
+            pdfHandler.openDocument();
+            pdfHandler.writeDocument();
+            pdfHandler.closeDocument();
+        } catch (Exception exc) {
+            if (exc instanceof IllegalArgumentException) throw exc;
+            logger.error("Couldn't generate payment orders {} file", fileType.getDesc(), exc);
+            throw new ServiceException("Couldn't generate payment orders " + fileType.getDesc() + " file", exc);
         }
     }
 

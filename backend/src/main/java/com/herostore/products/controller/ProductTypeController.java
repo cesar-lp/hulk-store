@@ -1,12 +1,15 @@
 package com.herostore.products.controller;
 
-import com.herostore.products.utils.FileUtils;
 import com.herostore.products.constants.FileType;
 import com.herostore.products.dto.ProductTypeDTO;
+import com.herostore.products.exception.ServiceException;
 import com.herostore.products.service.ProductTypeService;
+import com.herostore.products.utils.FileUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,7 +42,9 @@ public class ProductTypeController {
 
     ProductTypeService productTypeService;
 
-    static String FILE_NAME = "product_types";
+    Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+
+    static String FILE_NAME = "product-types";
 
     @GetMapping("")
     @ResponseStatus(HttpStatus.OK)
@@ -49,10 +54,16 @@ public class ProductTypeController {
 
     @GetMapping(value = "/export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     @ResponseStatus(HttpStatus.OK)
-    public void exportToFile(@RequestParam("format") FileType fileType, HttpServletResponse response) throws IOException {
+    public void exportToFile(@RequestParam("format") FileType fileType, HttpServletResponse response) {
         var fileName = FileUtils.buildFileName(FILE_NAME, fileType);
         adaptHttpResponseForFileDownload(response, fileName);
-        productTypeService.exportToFile(response, fileType);
+
+        try {
+            productTypeService.exportProductTypesToFile(response.getOutputStream(), fileType);
+        } catch (IOException e) {
+            logger.error("Couldn't extract output stream from response", e);
+            throw new ServiceException("Couldn't extract output stream from response", e);
+        }
     }
 
     @GetMapping("/{id}")

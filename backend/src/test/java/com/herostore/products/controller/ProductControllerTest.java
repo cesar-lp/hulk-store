@@ -25,6 +25,7 @@ import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -59,6 +60,22 @@ class ProductControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(ResponseBodyMatchers.responseContainsJsonCollection(expectedProductsFound, ProductResponse.class));
+    }
+
+    @Test
+    void exportProductsToFile() throws Exception {
+        var response = mockMvc.perform(
+                get(BASE_URI + "/export")
+                        .param("format", "csv")
+                        .param("stock", ProductStockCondition.ALL.getValue())
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse();
+
+        assertEquals(MediaType.APPLICATION_OCTET_STREAM_VALUE, response.getContentType());
+        assertEquals("attachment; filename=products.csv",
+                response.getHeaderValue("content-disposition"));
     }
 
     @Test

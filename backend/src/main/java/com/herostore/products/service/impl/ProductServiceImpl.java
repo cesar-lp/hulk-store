@@ -1,20 +1,21 @@
 package com.herostore.products.service.impl;
 
-import com.herostore.products.constants.ProductStockCondition;
-import com.herostore.products.dto.response.ProductResponse;
-import com.herostore.products.exception.ResourceNotFoundException;
-import com.herostore.products.exception.ServiceException;
-import com.herostore.products.io.CSVHandler;
-import com.herostore.products.repository.ProductRepository;
-import com.herostore.products.service.ProductTypeService;
 import com.herostore.products.constants.FileType;
+import com.herostore.products.constants.ProductStockCondition;
 import com.herostore.products.domain.Product;
 import com.herostore.products.domain.ProductType;
 import com.herostore.products.dto.request.ProductRequest;
-import com.herostore.products.io.ExcelHandler;
+import com.herostore.products.dto.response.ProductResponse;
+import com.herostore.products.exception.ResourceNotFoundException;
+import com.herostore.products.exception.ServiceException;
+import com.herostore.products.io.CSVWriter;
+import com.herostore.products.io.ExcelWriter;
+import com.herostore.products.io.WorkbookData;
 import com.herostore.products.mapper.ProductMapper;
 import com.herostore.products.mapper.ProductTypeMapper;
+import com.herostore.products.repository.ProductRepository;
 import com.herostore.products.service.ProductService;
+import com.herostore.products.service.ProductTypeService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -22,10 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.util.List;
 
 @Service
@@ -39,12 +38,14 @@ public class ProductServiceImpl implements ProductService {
     ProductTypeService productTypeService;
     ProductMapper productMapper;
     ProductTypeMapper productTypeMapper;
+    CSVWriter csvWriter;
+    ExcelWriter excelWriter;
 
     /**
      * Retrieves all existing products.
      *
      * @param stockCondition whether all, available or unavailable products should be retrieved
-     * @return all existing products.
+     * @return all products found based on stock condition.
      */
     @Override
     public List<ProductResponse> getAllProducts(ProductStockCondition stockCondition) {
@@ -64,23 +65,23 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * Exports products to a requested file format
+     * Exports products to a file.
      *
-     * @param response
-     * @param fileType
-     * @param stockCondition
+     * @param os             output stream to which the file will be written.
+     * @param fileType       file type (PDF, Excel, CSV) to export.
+     * @param stockCondition product stock condition filter
      */
     @Override
-    public void exportToFile(HttpServletResponse response, FileType fileType, ProductStockCondition stockCondition) {
+    public void exportProductsToFile(OutputStream os, FileType fileType, ProductStockCondition stockCondition) {
         var products = getAllProducts(stockCondition);
 
         try {
             switch (fileType) {
                 case CSV:
-                    exportToCSV(response.getWriter(), products);
+                    exportToCSV(os, products);
                     break;
                 case EXCEL:
-                    exportToExcel(response.getOutputStream(), products);
+                    exportToExcel(os, products);
                     break;
                 default:
                     throw new IllegalArgumentException("Format type " + fileType.name() + " not valid");
@@ -187,19 +188,11 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    private void exportToCSV(PrintWriter writer, List<ProductResponse> products) throws IOException {
+    private void exportToCSV(OutputStream os, List<ProductResponse> products) throws IOException {
         var headers = new String[]{"ID", "Name", "Product Type", "Price", "Stock"};
+        var fieldNames = new String[]{"id", "name", "productTypeName", "price", "stock"};
 
-        try (var printer = CSVHandler.getPrinter(writer, headers)) {
-            for (ProductResponse product : products) {
-                printer.printRecord(
-                        product.getId(),
-                        product.getName(),
-                        product.getProductTypeName(),
-                        product.getPrice(),
-                        product.getStock());
-            }
-        }
+        csvWriter.write(os, headers, fieldNames, products);
     }
 
     private void exportToExcel(OutputStream outputStream, List<ProductResponse> products) throws IOException {
@@ -207,14 +200,15 @@ public class ProductServiceImpl implements ProductService {
         var headers = new String[]{"ID", "Name", "Product type", "Price", "Stock"};
         var fields = new String[]{"id", "name", "productTypeName", "price", "stock"};
 
-        var excelHandler = ExcelHandler.workbookBuilder()
+        var workbookData = WorkbookData.builder()
                 .sheetName("Products")
                 .columnWidths(columnWidths)
                 .headers(headers)
                 .fields(fields)
                 .build();
 
-        excelHandler.writeWorkbook(products, outputStream);
+        excelWriter.withData(workbookData);
+        excelWriter.writeWorkbook(outputStream, products);
     }
 
     private Product updateProductDetails(Product old, Product updated) {

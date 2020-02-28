@@ -3,7 +3,8 @@ package com.herostore.products.constants;
 public enum FileType {
 
     CSV("csv", ".csv"),
-    EXCEL("xlsx", ".xlsx");
+    EXCEL("xlsx", ".xlsx"),
+    PDF("pdf", ".pdf");
 
     private String desc;
     private String extension;

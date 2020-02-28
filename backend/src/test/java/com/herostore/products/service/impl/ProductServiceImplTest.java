@@ -1,5 +1,6 @@
 package com.herostore.products.service.impl;
 
+import com.herostore.products.constants.FileType;
 import com.herostore.products.constants.ProductStockCondition;
 import com.herostore.products.domain.Product;
 import com.herostore.products.domain.ProductType;
@@ -8,6 +9,9 @@ import com.herostore.products.dto.request.ProductRequest;
 import com.herostore.products.dto.response.ProductResponse;
 import com.herostore.products.exception.ResourceNotFoundException;
 import com.herostore.products.exception.ServiceException;
+import com.herostore.products.io.CSVWriter;
+import com.herostore.products.io.ExcelWriter;
+import com.herostore.products.io.WorkbookData;
 import com.herostore.products.mapper.ProductMapper;
 import com.herostore.products.mapper.ProductTypeMapper;
 import com.herostore.products.repository.ProductRepository;
@@ -21,6 +25,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -53,12 +59,24 @@ class ProductServiceImplTest {
     @Mock
     ProductTypeService productTypeService;
 
+    @Mock
+    CSVWriter csvWriter;
+
+    @Mock
+    ExcelWriter excelWriter;
+
     @InjectMocks
     ProductServiceImpl productService;
 
     @AfterEach
     void runAfterEach() {
-        verifyNoMoreInteractions(productMapper, productTypeMapper, productTypeService, productRepository);
+        verifyNoMoreInteractions(
+                productMapper,
+                productTypeMapper,
+                productTypeService,
+                productRepository,
+                csvWriter,
+                excelWriter);
     }
 
     @Test
@@ -81,7 +99,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void shouldGetProductsByStockConditionSuccessfully() {
+    void shouldGetAvailableProductsSuccessfully() {
         var productsInStock = mockProductsInStock();
         var expectedProductsInStockToRetrieve = mockProductsInStockResponse();
 
@@ -97,6 +115,25 @@ class ProductServiceImplTest {
 
         verify(productRepository, times(1)).retrieveProductsByStockCondition(true);
         verify(productMapper, times(1)).toProductResponseList(productsInStock);
+    }
+
+    @Test
+    void shouldGetUnavailableProductsSuccessfully() {
+        var unavailableProducts = mockUnavailableProducts();
+        var expectedProductsRetrieved = mockUnavailableProductsResponse();
+
+        when(productRepository.retrieveProductsByStockCondition(false))
+                .thenReturn(unavailableProducts);
+
+        when(productMapper.toProductResponseList(unavailableProducts))
+                .thenReturn(expectedProductsRetrieved);
+
+        var actualProductsRetrieved = productService.getAllProducts(ProductStockCondition.UNAVAILABLE);
+
+        assertThat(actualProductsRetrieved, samePropertyValuesAs(expectedProductsRetrieved));
+
+        verify(productRepository, times(1)).retrieveProductsByStockCondition(false);
+        verify(productMapper, times(1)).toProductResponseList(unavailableProducts);
     }
 
     @Test
@@ -310,6 +347,83 @@ class ProductServiceImplTest {
         verify(productRepository, times(1)).findById(id);
     }
 
+    @Test
+    void shouldExportToCSVSuccessfully() throws IOException {
+        var existingProducts = mockExistingProducts();
+        var existingProductsResponse = mockExistingProductsResponse();
+
+        when(productRepository.findAll())
+                .thenReturn(existingProducts);
+
+        when(productMapper.toProductResponseList(existingProducts))
+                .thenReturn(existingProductsResponse);
+
+        var os = new ByteArrayOutputStream();
+
+        productService.exportProductsToFile(os, FileType.CSV, ProductStockCondition.ALL);
+
+        var headers = new String[]{"ID", "Name", "Product Type", "Price", "Stock"};
+        var fieldNames = new String[]{"id", "name", "productTypeName", "price", "stock"};
+
+        verify(productRepository, times(1)).findAll();
+        verify(productMapper, times(1)).toProductResponseList(existingProducts);
+        verify(csvWriter, times(1)).write(os, headers, fieldNames, existingProductsResponse);
+    }
+
+    @Test
+    void shouldExportToExcelSuccessfully() throws IOException {
+        var existingProducts = mockExistingProducts();
+        var existingProductsResponse = mockExistingProductsResponse();
+
+        when(productRepository.findAll())
+                .thenReturn(existingProducts);
+
+        when(productMapper.toProductResponseList(existingProducts))
+                .thenReturn(existingProductsResponse);
+
+        var outputStream = new ByteArrayOutputStream();
+
+        var columnWidths = new int[]{2000, 7000, 7000, 3000, 2000};
+        var headers = new String[]{"ID", "Name", "Product type", "Price", "Stock"};
+        var fields = new String[]{"id", "name", "productTypeName", "price", "stock"};
+
+        var workbookData = WorkbookData.builder()
+                .sheetName("Products")
+                .columnWidths(columnWidths)
+                .headers(headers)
+                .fields(fields)
+                .build();
+
+        productService.exportProductsToFile(outputStream, FileType.EXCEL, ProductStockCondition.ALL);
+
+        verify(productRepository, times(1)).findAll();
+        verify(productMapper, times(1)).toProductResponseList(existingProducts);
+        verify(excelWriter, times(1)).withData(workbookData);
+        verify(excelWriter, times(1)).writeWorkbook(outputStream, existingProductsResponse);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenExportingToInvalidFileFormat() {
+        var existingProducts = mockExistingProducts();
+        var existingProductsResponse = mockExistingProductsResponse();
+        var expectedError = "Format type PDF not valid";
+
+        when(productRepository.findAll())
+                .thenReturn(existingProducts);
+
+        when(productMapper.toProductResponseList(existingProducts))
+                .thenReturn(existingProductsResponse);
+
+        var exc = assertThrows(IllegalArgumentException.class,
+                () -> productService.exportProductsToFile(new ByteArrayOutputStream(), FileType.PDF, ProductStockCondition.ALL));
+
+        assertEquals(expectedError, exc.getMessage());
+
+        verify(productRepository, times(1)).findAll();
+        verify(productMapper, times(1)).toProductResponseList(existingProducts);
+    }
+
+
     private Product mockNewProduct() {
         var cup = ProductType.builder()
                 .id(1L)
@@ -460,5 +574,47 @@ class ProductServiceImplTest {
 
     private List<ProductResponse> mockProductsInStockResponse() {
         return singletonList(mockExistingProductsResponse().get(1));
+    }
+
+    private List<Product> mockUnavailableProducts() {
+        var shirtProductType = getProductType(1L, "Shirts");
+
+        var ironManShirt = Product.builder()
+                .id(1L)
+                .name("Iron Man Shirt")
+                .productType(shirtProductType)
+                .stock(0)
+                .price(BigDecimal.valueOf(60.00))
+                .build();
+
+        return singletonList(ironManShirt);
+    }
+
+    private List<ProductResponse> mockUnavailableProductsResponse() {
+        var shirtProductType = getProductTypeDTO(1L, "Shirts");
+
+        var ironManShirt = ProductResponse.builder()
+                .id(1L)
+                .name("Iron Man Shirt")
+                .productType(shirtProductType)
+                .stock(0)
+                .price(BigDecimal.valueOf(60.00))
+                .build();
+
+        return singletonList(ironManShirt);
+    }
+
+    private ProductType getProductType(long id, String name) {
+        return ProductType.builder()
+                .id(id)
+                .name(name)
+                .build();
+    }
+
+    private ProductTypeDTO getProductTypeDTO(long id, String name) {
+        return ProductTypeDTO.builder()
+                .id(id)
+                .name(name)
+                .build();
     }
 }
