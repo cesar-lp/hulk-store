@@ -5,13 +5,11 @@ import com.herostore.products.dto.ProductTypeDTO;
 import com.herostore.products.dto.request.ProductRequest;
 import com.herostore.products.dto.response.ProductResponse;
 import com.herostore.products.exception.ResourceNotFoundException;
-import com.herostore.products.exception.error.FieldValidationError;
 import com.herostore.products.service.ProductService;
 import com.herostore.products.utils.ResponseBodyMatchers;
 import com.herostore.products.utils.SerializationUtils;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -21,10 +19,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 
+import static com.herostore.products.utils.ResponseBodyMatchers.responseContainsValidationErrors;
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -116,30 +114,17 @@ class ProductControllerTest {
     }
 
     @Test
-    @Disabled
     void createInvalidProductThrowsValidationError() throws Exception {
         var newProduct = ProductRequest.builder().build();
-
-        var validationErrorsExpected = new FieldValidationError[]{
-                new FieldValidationError("name", "Name is required", nullValue()),
-                new FieldValidationError("productTypeId", "Product type id is required", nullValue()),
-                new FieldValidationError("stock", "Stock is required", nullValue()),
-                new FieldValidationError("price", "Price is required", nullValue())
-        };
 
         mockMvc.perform(
                 post(BASE_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(SerializationUtils.objectMapper.writeValueAsBytes(newProduct)))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(ResponseBodyMatchers.response().containsValidationErrors(validationErrorsExpected))
+                .andExpect(responseContainsValidationErrors(4))
                 .andExpect(jsonPath("$.path", is(BASE_URI)))
                 .andExpect(jsonPath("$.timestamp").exists());
-
-        validationErrorsExpected = new FieldValidationError[]{
-                new FieldValidationError("stock", "Stock cannot be negative", -1),
-                new FieldValidationError("price", "Price cannot be negative", -1),
-        };
 
         newProduct = ProductRequest.builder()
                 .name("Iron Man Cup")
@@ -153,7 +138,7 @@ class ProductControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(SerializationUtils.objectMapper.writeValueAsBytes(newProduct)))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(ResponseBodyMatchers.response().containsValidationErrors(validationErrorsExpected))
+                .andExpect(responseContainsValidationErrors(2))
                 .andExpect(jsonPath("$.path", is(BASE_URI)))
                 .andExpect(jsonPath("$.timestamp").exists());
     }
@@ -190,31 +175,18 @@ class ProductControllerTest {
     }
 
     @Test
-    @Disabled
     void updateInvalidProductThrowsValidationError() throws Exception {
         var id = 1L;
         var productToUpdate = ProductRequest.builder().build();
-
-        var validationErrorsExpected = new FieldValidationError[]{
-                new FieldValidationError("name", "Name is required", nullValue()),
-                new FieldValidationError("productTypeId", "Product type id is required", nullValue()),
-                new FieldValidationError("stock", "Stock is required", nullValue()),
-                new FieldValidationError("price", "Price is required", nullValue())
-        };
 
         mockMvc.perform(
                 put("{base-uri}/{id}", BASE_URI, id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(SerializationUtils.objectMapper.writeValueAsBytes(productToUpdate)))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(ResponseBodyMatchers.response().containsValidationErrors(validationErrorsExpected))
-                .andExpect(jsonPath("$.path", is(BASE_URI)))
+                .andExpect(responseContainsValidationErrors(4))
+                .andExpect(jsonPath("$.path", is(BASE_URI + "/" + id)))
                 .andExpect(jsonPath("$.timestamp").exists());
-
-        validationErrorsExpected = new FieldValidationError[]{
-                new FieldValidationError("stock", "Stock cannot be negative", -1),
-                new FieldValidationError("price", "Price cannot be negative", -1),
-        };
 
         productToUpdate = ProductRequest.builder()
                 .name("Iron Man Cup")
@@ -228,8 +200,8 @@ class ProductControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(SerializationUtils.objectMapper.writeValueAsBytes(productToUpdate)))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(ResponseBodyMatchers.response().containsValidationErrors(validationErrorsExpected))
-                .andExpect(jsonPath("$.path", is(BASE_URI)))
+                .andExpect(responseContainsValidationErrors(2))
+                .andExpect(jsonPath("$.path", is(BASE_URI + "/" + id)))
                 .andExpect(jsonPath("$.timestamp").exists());
     }
 

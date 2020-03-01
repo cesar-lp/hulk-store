@@ -1,0 +1,12 @@
+.mat-column-product {
+  width: 20em;
+}
+
+.mat-column-price,
+.mat-column-total {
+  width: 8em;
+}
+
+.mat-column-quantity {
+  width: 7em;
+}

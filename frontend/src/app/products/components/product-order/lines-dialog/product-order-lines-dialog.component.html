@@ -1,0 +1,30 @@
+<h2 mat-dialog-title>{{title}}</h2>
+<mat-dialog-content class="mat-typography">
+  <table mat-table [dataSource]="productOrderLines" class="mat-elevation-z8">
+    <ng-container matColumnDef="product">
+      <th mat-header-cell *matHeaderCellDef class="align-center"> Product </th>
+      <td mat-cell *matCellDef="let element"> {{element?.productName }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="price">
+      <th mat-header-cell *matHeaderCellDef class="align-right"> Price </th>
+      <td mat-cell *matCellDef="let element" class="align-right"> {{element?.productPrice | currency }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="quantity">
+      <th mat-header-cell *matHeaderCellDef class="align-right"> Quantity </th>
+      <td mat-cell *matCellDef="let element" class="align-right"> {{element?.quantity }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="total">
+      <th mat-header-cell *matHeaderCellDef class="align-right"> Total </th>
+      <td mat-cell *matCellDef="let element" class="align-right"> {{element?.total | currency }} </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;" matRipple class="element-row"></tr>
+  </table>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close (cancel)="close()">Close</button>
+</mat-dialog-actions>

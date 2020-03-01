@@ -35,20 +35,15 @@ public class ResponseBodyMatchers {
         };
     }
 
-    public ResultMatcher containsValidationErrors(FieldValidationError... expectedErrors) {
+    public static <T> ResultMatcher responseContainsValidationErrors(int errorsAmount) {
         return mvcResult -> {
             var json = mvcResult.getResponse().getContentAsString();
             var validationError = objectMapper.readValue(json, ValidationError.class);
 
             assertThat(validationError.getError()).isEqualTo("Validation Error");
             assertThat(validationError.getStatusCode()).isEqualTo(422);
-            assertThat(validationError.getFieldValidationErrors()).hasSize(expectedErrors.length);
-            assertThat(validationError.getFieldValidationErrors()).containsExactlyInAnyOrder(expectedErrors);
+            assertThat(validationError.getFieldValidationErrors()).hasSize(errorsAmount);
         };
-    }
-
-    public static ResponseBodyMatchers response() {
-        return new ResponseBodyMatchers();
     }
 
     private static <T> void assertFieldByField(T actualObject, T expectedObject) {

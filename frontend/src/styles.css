@@ -33,12 +33,17 @@ td.mat-cell {
 }
 
 .snackbar-success {
-    color: white;
-    background-color: #4db6ac;
+  color: white;
+  background-color: #4db6ac;
+}
+
+.snackbar-error {
+  color: white;
+  background-color: #ef5350;
 }
 
 .buttons-container {
-    margin-top: 16px;
+  margin-top: 16px;
 }
 
 .button-primary {
@@ -129,4 +134,17 @@ input[type=number] {
 
 button[disabled] {
   opacity: 0.4;
+}
+
+.mat-snack-bar-container {
+  margin-top: 80px !important;
+}
+
+.align-center {
+  text-align: center;
+}
+
+.align-right,
+th.mat-header-cell.align-right {
+  text-align: right;
 }
