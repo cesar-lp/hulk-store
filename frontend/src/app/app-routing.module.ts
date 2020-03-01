@@ -1,11 +1,13 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
-import { ProductListComponent } from './components/product-list/product-list.component';
-import { ProductComponent } from './components/product/product.component';
-import { ProductTypeListComponent } from './components/product-type-list/product-type-list.component';
-import { ProductOrderListComponent } from './components/product-order-list/product-order-list.component';
-import { ProductOrderComponent } from './components/product-order/product-order.component';
+import {
+  ProductListComponent,
+  ProductComponent,
+  ProductTypeListComponent,
+  ProductOrderListComponent,
+  ProductOrderComponent
+} from './products/components';
 
 const routes: Routes = [
   {
@@ -13,7 +15,7 @@ const routes: Routes = [
     component: ProductListComponent
   },
   {
-    path: "products/:id/edit",
+    path: 'products/:id/edit',
     component: ProductComponent
   },
   {
@@ -29,7 +31,7 @@ const routes: Routes = [
     pathMatch: 'full'
   },
   { path: '**', component: ProductComponent }
-]
+];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],

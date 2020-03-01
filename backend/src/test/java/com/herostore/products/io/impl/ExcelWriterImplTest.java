@@ -3,7 +3,7 @@ package com.herostore.products.io.impl;
 import com.herostore.products.exception.ServiceException;
 import com.herostore.products.io.ExcelWriter;
 import com.herostore.products.io.WorkbookData;
-import com.herostore.products.mocks.TestClass;
+import com.herostore.products.utils.TestClass;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;

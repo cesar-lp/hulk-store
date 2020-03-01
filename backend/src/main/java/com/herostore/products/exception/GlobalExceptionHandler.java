@@ -27,9 +27,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, error, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
     }
 
-    @ExceptionHandler(InvalidProductOrderException.class)
+    @ExceptionHandler(InvalidProductOrderLineException.class)
     public ResponseEntity<Object> handleInvalidProductLineException(Exception ex, WebRequest request) {
-        var invalidProductLines = ((InvalidProductOrderException) ex).getInvalidProductOrderErrors();
+        var invalidProductLines = ((InvalidProductOrderLineException) ex).getInvalidProductOrderLineErrors();
         var error = new InvalidPaymentOrderError(invalidProductLines, getRequestUri(request));
         return handleExceptionInternal(ex, error, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
     }

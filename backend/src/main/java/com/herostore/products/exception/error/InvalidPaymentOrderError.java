@@ -14,7 +14,7 @@ public class InvalidPaymentOrderError implements Serializable {
 
     private static final long serialVersionUID = -3109360529643328910L;
 
-    public InvalidPaymentOrderError(List<InvalidProductOrderError> invalidProductOrders, String path) {
+    public InvalidPaymentOrderError(List<InvalidProductOrderLineError> invalidProductOrders, String path) {
         error = "Invalid Payment Order";
         this.statusCode = 500;
         message = "There are invalid product orders";
@@ -26,7 +26,7 @@ public class InvalidPaymentOrderError implements Serializable {
     String error;
     Integer statusCode;
     String message;
-    List<InvalidProductOrderError> invalidProductOrders;
+    List<InvalidProductOrderLineError> invalidProductOrders;
     String path;
     LocalDateTime timestamp;
 }

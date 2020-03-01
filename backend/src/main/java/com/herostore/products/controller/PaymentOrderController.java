@@ -1,10 +1,10 @@
 package com.herostore.products.controller;
 
 import com.herostore.products.constants.FileType;
-import com.herostore.products.dto.request.PaymentOrderRequest;
-import com.herostore.products.dto.response.PaymentOrderResponse;
+import com.herostore.products.dto.request.ProductOrderRequest;
+import com.herostore.products.dto.response.ProductOrderResponse;
 import com.herostore.products.exception.ServiceException;
-import com.herostore.products.service.PaymentOrderService;
+import com.herostore.products.service.ProductOrderService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -38,7 +38,7 @@ import static com.herostore.products.utils.HttpUtils.adaptHttpResponseForFileDow
 )
 public class PaymentOrderController {
 
-    PaymentOrderService paymentOrderService;
+    ProductOrderService productOrderService;
 
     Logger logger = LoggerFactory.getLogger(this.getClass().getName());
 
@@ -46,8 +46,8 @@ public class PaymentOrderController {
 
     @GetMapping("")
     @ResponseStatus(HttpStatus.OK)
-    public List<PaymentOrderResponse> getAllOrders() {
-        return paymentOrderService.getAllPaymentOrders();
+    public List<ProductOrderResponse> getAllOrders() {
+        return productOrderService.getAllProductOrders();
     }
 
     @GetMapping(value = "/export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -58,7 +58,7 @@ public class PaymentOrderController {
         adaptHttpResponseForFileDownload(response, fileName);
 
         try {
-            paymentOrderService.exportPaymentOrders(response.getOutputStream(), fileType);
+            productOrderService.exportProductOrders(response.getOutputStream(), fileType);
         } catch (IOException e) {
             logger.error("Couldn't extract output stream from response", e);
             throw new ServiceException("Couldn't extract output stream from response", e);
@@ -67,7 +67,7 @@ public class PaymentOrderController {
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public PaymentOrderResponse registerPaymentOrder(@RequestBody @Valid PaymentOrderRequest paymentOrderRequest) {
-        return paymentOrderService.registerPaymentOrder(paymentOrderRequest);
+    public ProductOrderResponse registerPaymentOrder(@RequestBody @Valid ProductOrderRequest productOrderRequest) {
+        return productOrderService.registerProductOrder(productOrderRequest);
     }
 }

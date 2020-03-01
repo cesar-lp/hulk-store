@@ -2,9 +2,7 @@ package com.herostore.products.controller;
 
 import com.herostore.products.dto.ProductTypeDTO;
 import com.herostore.products.exception.ResourceNotFoundException;
-import com.herostore.products.exception.error.FieldValidationError;
 import com.herostore.products.service.ProductTypeService;
-import com.herostore.products.utils.ResponseBodyMatchers;
 import com.herostore.products.utils.SerializationUtils;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -17,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static com.herostore.products.utils.ResponseBodyMatchers.responseContainsJsonCollection;
 import static com.herostore.products.utils.ResponseBodyMatchers.responseContainsJsonObject;
+import static com.herostore.products.utils.ResponseBodyMatchers.responseContainsValidationErrors;
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -107,16 +106,12 @@ public class ProductTypeControllerTest {
     void createInvalidProductTypeThrowsValidationError() throws Exception {
         var newProductType = ProductTypeDTO.builder().build();
 
-        var expectedErrors = new FieldValidationError[]{
-                new FieldValidationError("name", "Name is required", null)
-        };
-
         mockMvc.perform(
                 post(BASE_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(SerializationUtils.objectMapper.writeValueAsBytes(newProductType)))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(ResponseBodyMatchers.response().containsValidationErrors(expectedErrors))
+                .andExpect(responseContainsValidationErrors(1))
                 .andExpect(jsonPath("$.path", is(BASE_URI)))
                 .andExpect(jsonPath("$.timestamp").exists());
     }

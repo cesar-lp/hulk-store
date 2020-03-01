@@ -1,31 +1,34 @@
 package com.herostore.products.domain;
 
 import com.herostore.products.domain.common.ValidationEntity;
-import com.herostore.products.domain.embedded.ProductDetail;
 import com.herostore.products.exception.InvalidEntityStateException;
 import com.herostore.products.utils.NumberUtils;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
-import javax.persistence.Embedded;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 
-@Getter
 @Entity
 @Builder
-@ToString
+@Getter
 @NoArgsConstructor
 @Table(name = "product_order")
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -35,32 +38,36 @@ public class ProductOrder extends ValidationEntity<ProductOrder> {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Embedded
-    @NotNull(message = "Product detail cannot be null")
-    ProductDetail productDetail;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "payment_id", referencedColumnName = "id")
+    @NotEmpty(message = "Must contain at least one product order line")
+    List<ProductOrderLine> productOrderLines;
 
-    @NotNull(message = "Quantity cannot be null")
-    @Min(value = 0, message = "Quantity cannot be negative")
-    Integer quantity;
+    @CreationTimestamp
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP")
+    LocalDateTime createdAt;
 
     @NotNull(message = "Total cannot be null")
     @DecimalMin(value = "0", message = "Total cannot be negative")
     BigDecimal total;
 
-    private ProductOrder(Long id, ProductDetail productDetail, Integer quantity, BigDecimal total) {
+    private ProductOrder(Long id, List<ProductOrderLine> productOrderLines, LocalDateTime createdAt, BigDecimal total) {
         this.id = id;
-        this.productDetail = productDetail;
-        this.quantity = quantity;
+        this.productOrderLines = productOrderLines;
+        this.createdAt = createdAt;
         this.total = NumberUtils.roundToTwoDecimalPlaces(total);
         validateEntity();
-        validateTotal(productDetail.getPrice(), quantity, this.total);
+        validateTotal(this.total, this.productOrderLines);
     }
 
-    private void validateTotal(BigDecimal price, Integer quantity, BigDecimal total) {
-        var expectedTotal = NumberUtils.roundToTwoDecimalPlaces(price.multiply(BigDecimal.valueOf(quantity)));
+    private void validateTotal(BigDecimal paymentOrderTotal, List<ProductOrderLine> productOrderLines) {
+        var calculatedTotal = productOrderLines
+                .stream()
+                .map(ProductOrderLine::getTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        if (!expectedTotal.equals(total)) {
-            throw new InvalidEntityStateException("total", "Supplied total and calculated total do not match");
+        if (!paymentOrderTotal.equals(calculatedTotal)) {
+            throw new InvalidEntityStateException("total", "Total and order lines' total do not match");
         }
     }
 }

@@ -17,6 +17,7 @@ public abstract class ValidationEntity<T> {
         validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
+    @SuppressWarnings("unchecked")
     protected void validateEntity() {
         var violations = validator.validate((T) this);
         if (!violations.isEmpty()) {

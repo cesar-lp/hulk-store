@@ -6,7 +6,11 @@ import com.herostore.products.utils.NumberUtils;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,103 +20,91 @@ public class ProductOrderTest {
 
     @Test
     void shouldCreateProductOrderSuccessfully() {
-        var productDetail = mockProductDetail();
+        var id = 1L;
+        var createdAt = LocalDateTime.now();
+        var productOrders = mockProductOrders();
+        var total = NumberUtils.roundToTwoDecimalPlaces(BigDecimal.valueOf(30.50));
 
         var productOrder = ProductOrder.builder()
-                .id(1L)
-                .productDetail(productDetail)
-                .quantity(2)
-                .total(BigDecimal.valueOf(51.00))
+                .id(id)
+                .productOrderLines(productOrders)
+                .createdAt(createdAt)
+                .total(total)
                 .build();
 
-        var expectedId = 1L;
-        var expectedQuantity = 2;
-        var expectedTotal = NumberUtils.roundToTwoDecimalPlaces(BigDecimal.valueOf(51.00));
-
-        assertEquals(expectedId, productOrder.getId());
-        assertEquals(expectedQuantity, productOrder.getQuantity());
-        assertEquals(expectedTotal, productOrder.getTotal());
-        assertThat(productOrder.getProductDetail(), samePropertyValuesAs(productDetail));
+        assertEquals(id, productOrder.getId());
+        assertThat(productOrder.getProductOrderLines().get(0), samePropertyValuesAs(productOrders.get(0)));
+        assertEquals(createdAt, productOrder.getCreatedAt());
+        assertEquals(total, productOrder.getTotal());
     }
 
     @Test
-    void shouldThrowExceptionWhenCreatingProductOrderWithInvalidQuantity() {
-        var productDetail = mockProductDetail();
+    void shouldThrowExceptionWhenCreatingProductOrderWithoutProductOrderLine() {
+        var expectedMessage = "Must contain at least one product order line";
 
-        var expectedError = "Quantity cannot be null";
         var ex = assertThrows(InvalidEntityStateException.class,
                 () -> ProductOrder.builder()
-                        .productDetail(productDetail)
-                        .quantity(null)
+                        .productOrderLines(emptyList())
                         .total(BigDecimal.ZERO)
                         .build());
 
-        assertEquals(expectedError, ex.getFieldErrorMessage("quantity"));
+        assertEquals(expectedMessage, ex.getFieldErrorMessage("productOrderLines"));
 
-        expectedError = "Quantity cannot be negative";
         ex = assertThrows(InvalidEntityStateException.class,
                 () -> ProductOrder.builder()
-                        .productDetail(productDetail)
-                        .quantity(-50)
+                        .productOrderLines(null)
                         .total(BigDecimal.ZERO)
                         .build());
 
-        assertEquals(expectedError, ex.getFieldErrorMessage("quantity"));
+        assertEquals(expectedMessage, ex.getFieldErrorMessage("productOrderLines"));
     }
 
     @Test
-    void shouldThrowExceptionWhenCreatingPaymentOrderWithInvalidTotal() {
-        var productDetail = mockProductDetail();
+    void shouldThrowExceptionWhenCreatingProductOrderWithInvalidTotal() {
+        var expectedMessage = "Total cannot be null";
 
-        var expectedError = "Total cannot be null";
+        List<ProductOrderLine> productOrderLines = mockProductOrders();
+
         var ex = assertThrows(InvalidEntityStateException.class,
                 () -> ProductOrder.builder()
-                        .productDetail(productDetail)
-                        .quantity(0)
+                        .productOrderLines(productOrderLines)
                         .total(null)
                         .build());
 
-        assertEquals(expectedError, ex.getFieldErrorMessage("total"));
+        assertEquals(expectedMessage, ex.getFieldErrorMessage("total"));
 
-        expectedError = "Total cannot be negative";
+        expectedMessage = "Total cannot be negative";
+
         ex = assertThrows(InvalidEntityStateException.class,
                 () -> ProductOrder.builder()
-                        .productDetail(productDetail)
-                        .quantity(0)
-                        .total(BigDecimal.valueOf(-75))
+                        .productOrderLines(productOrderLines)
+                        .total(BigDecimal.valueOf(-5))
                         .build());
 
-        assertEquals(expectedError, ex.getFieldErrorMessage("total"));
+        assertEquals(expectedMessage, ex.getFieldErrorMessage("total"));
 
-        expectedError = "Supplied total and calculated total do not match";
+        expectedMessage = "Total and order lines' total do not match";
+
         ex = assertThrows(InvalidEntityStateException.class,
                 () -> ProductOrder.builder()
-                        .productDetail(productDetail)
-                        .quantity(2)
-                        .total(BigDecimal.valueOf(50.00))
+                        .productOrderLines(productOrderLines)
+                        .total(BigDecimal.valueOf(25.00))
                         .build());
 
-        assertEquals(expectedError, ex.getFieldErrorMessage("total"));
+        assertEquals(expectedMessage, ex.getFieldErrorMessage("total"));
     }
 
-    @Test
-    void shouldThrowExceptionWhenCreatingProductOrderWithoutProductDetail() {
-        var expectedError = "Product detail cannot be null";
-        var ex = assertThrows(InvalidEntityStateException.class,
-                () -> ProductOrder.builder()
-                        .productDetail(null)
-                        .quantity(0)
-                        .total(BigDecimal.ZERO)
-                        .build());
-
-        assertEquals(expectedError, ex.getFieldErrorMessage("productDetail"));
-    }
-
-    private ProductDetail mockProductDetail() {
-        return ProductDetail.builder()
+    private List<ProductOrderLine> mockProductOrders() {
+        var productDetails = ProductDetail.builder()
                 .id(1L)
                 .name("Iron Man Cup")
-                .price(BigDecimal.valueOf(25.50))
+                .price(BigDecimal.valueOf(15.25))
                 .build();
+
+        return singletonList(ProductOrderLine.builder()
+                .productDetail(productDetails)
+                .quantity(2)
+                .total(BigDecimal.valueOf(30.50))
+                .build());
     }
 }

@@ -8,12 +8,16 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -31,9 +35,18 @@ public class ProductType extends ValidationEntity<ProductType> {
     @NotBlank(message = "Name cannot be empty")
     String name;
 
-    private ProductType(Long id, String name) {
+    @OneToMany(
+            mappedBy = "productType",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    Set<Product> products;
+
+    public ProductType(Long id, String name, Set<Product> products) {
         this.id = id;
         this.name = name;
+        this.products = products;
         validateEntity();
     }
 

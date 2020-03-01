@@ -1,60 +1,63 @@
-import { FileDownloaderComponent } from './components/file-downloader/file-downloader.component';
-import { NgModule } from '@angular/core';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { NgModule } from '@angular/core';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { ProductListComponent } from './components/product-list/product-list.component';
-import { StoreHTTPInterceptor } from './interceptors/http-interceptor.service';
-import { ConfirmationDialogComponent } from './components/dialog/confirmation-dialog/confirmation-dialog.component';
-import { ProductComponent } from './components/product/product.component';
-import { ProductTypeListComponent } from './components/product-type-list/product-type-list.component';
-import { ProductOrderListComponent } from './components/product-order-list/product-order-list.component';
-import { ProductTypeDialogComponent } from './components/product-type-modal/product-type-dialog.component';
-import { MaterialModule } from './modules/material.module';
-import { ProductOrderComponent } from './components/product-order/product-order.component';
+import { AppRoutingModule } from './app-routing.module';
+import { MaterialModule } from './material/material.module';
+import {
+  ProductListComponent,
+  ProductComponent,
+  ProductTypeListComponent,
+  ProductTypeDialogComponent,
+  ProductOrderComponent,
+  ProductOrderLinesDialogComponent,
+  ProductOrderListComponent,
+} from './products/components';
+import { ConfirmationDialogComponent, FileDownloaderComponent } from './common/components';
+import { GlobalHTTPInterceptor } from './core/interceptors';
+
+const MAT_SNACK_BAR_DEFAULT_OPTIONS_VALUE = {
+  duration: 2500,
+  horizontalPosition: 'right',
+  verticalPosition: 'top'
+};
 
 @NgModule({
   declarations: [
     AppComponent,
-    ProductListComponent,
     ConfirmationDialogComponent,
+    FileDownloaderComponent,
     ProductComponent,
+    ProductListComponent,
+    ProductOrderComponent,
+    ProductOrderLinesDialogComponent,
+    ProductOrderListComponent,
     ProductTypeListComponent,
     ProductTypeDialogComponent,
-    ProductOrderListComponent,
-    ProductOrderComponent,
-    FileDownloaderComponent
   ],
   imports: [
-    BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    HttpClientModule,
-    ReactiveFormsModule,
+    BrowserModule,
     FormsModule,
+    HttpClientModule,
     MaterialModule,
-    AppRoutingModule
+    ReactiveFormsModule,
   ],
   providers: [
     { provide: MAT_DIALOG_DATA, useValue: {} },
-    {
-      provide: MAT_SNACK_BAR_DEFAULT_OPTIONS, useValue: {
-        duration: 2500,
-        horizontalPosition: 'right',
-        verticalPosition: 'top'
-      }
-    },
-    { provide: HTTP_INTERCEPTORS, useClass: StoreHTTPInterceptor, multi: true }
+    { provide: MAT_SNACK_BAR_DEFAULT_OPTIONS, useValue: MAT_SNACK_BAR_DEFAULT_OPTIONS_VALUE },
+    { provide: HTTP_INTERCEPTORS, useClass: GlobalHTTPInterceptor, multi: true }
   ],
   entryComponents: [
+    ConfirmationDialogComponent,
     ProductTypeDialogComponent,
-    ConfirmationDialogComponent
+    ProductOrderLinesDialogComponent,
   ],
   bootstrap: [AppComponent]
 })
