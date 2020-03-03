@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -25,16 +26,18 @@ import static com.herostore.products.utils.ValidationUtils.checkNotNullNorNegati
 @Getter
 @Entity
 @Builder
-@Table(name = "product")
 @NoArgsConstructor
+@Table(name = "product")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Product extends ValidationEntity<Product> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(name = "id", updatable = false, nullable = false)
     Long id;
 
     @NotBlank(message = "Name cannot be empty")
+    @Column(name = "name", nullable = false)
     String name;
 
     @ManyToOne
@@ -44,10 +47,12 @@ public class Product extends ValidationEntity<Product> {
 
     @NotNull(message = "Stock cannot be null")
     @Min(value = 0, message = "Stock cannot be negative")
+    @Column(name = "stock", nullable = false)
     Integer stock;
 
     @NotNull(message = "Price cannot be null")
     @DecimalMin(value = "0", message = "Price cannot be negative")
+    @Column(name = "price", nullable = false)
     BigDecimal price;
 
     private Product(Long id, String name, ProductType productType, Integer stock, BigDecimal price) {

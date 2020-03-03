@@ -11,9 +11,6 @@ This is an example of a product store webapp developed with Java and Angular. It
 - Export existing product orders to PDF.
 
 ### Roadmap
-- [ ] Database
-  - [ ] PostgreSQL implementation
-  - [ ] Flyway migration
 - [ ] Auth & permissions
   - [ ] Backend implementation
   - [ ] Frontend implementation
