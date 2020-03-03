@@ -23,17 +23,17 @@ import java.math.BigDecimal;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductDetail extends ValidationEntity<ProductDetail> {
 
-    @Column(name = "product_id")
     @NotNull(message = "Product id cannot be null")
+    @Column(name = "product_id", nullable = false)
     Long id;
 
-    @Column(name = "product_name")
     @NotBlank(message = "Product name cannot be empty")
+    @Column(name = "product_name", nullable = false)
     String name;
 
-    @Column(name = "product_price")
     @NotNull(message = "Product price cannot be null")
     @DecimalMin(value = "0", message = "Product price cannot be negative")
+    @Column(name = "product_price", nullable = false)
     BigDecimal price;
 
     private ProductDetail(Long id, String name, BigDecimal price) {

@@ -35,11 +35,12 @@ import java.util.List;
 public class ProductOrder extends ValidationEntity<ProductOrder> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(name = "id", updatable = false, nullable = false)
     Long id;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "payment_id", referencedColumnName = "id")
+    @JoinColumn(name = "payment_id", referencedColumnName = "id", nullable = false)
     @NotEmpty(message = "Must contain at least one product order line")
     List<ProductOrderLine> productOrderLines;
 
@@ -49,6 +50,7 @@ public class ProductOrder extends ValidationEntity<ProductOrder> {
 
     @NotNull(message = "Total cannot be null")
     @DecimalMin(value = "0", message = "Total cannot be negative")
+    @Column(name = "total", nullable = false)
     BigDecimal total;
 
     private ProductOrder(Long id, List<ProductOrderLine> productOrderLines, LocalDateTime createdAt, BigDecimal total) {

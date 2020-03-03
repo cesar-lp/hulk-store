@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 
+import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -32,7 +33,8 @@ import java.math.BigDecimal;
 public class ProductOrderLine extends ValidationEntity<ProductOrderLine> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(name = "id", updatable = false, nullable = false)
     Long id;
 
     @Embedded
@@ -41,10 +43,12 @@ public class ProductOrderLine extends ValidationEntity<ProductOrderLine> {
 
     @NotNull(message = "Quantity cannot be null")
     @Min(value = 0, message = "Quantity cannot be negative")
+    @Column(name = "quantity", nullable = false)
     Integer quantity;
 
     @NotNull(message = "Total cannot be null")
     @DecimalMin(value = "0", message = "Total cannot be negative")
+    @Column(name = "total", nullable = false)
     BigDecimal total;
 
     private ProductOrderLine(Long id, ProductDetail productDetail, Integer quantity, BigDecimal total) {
